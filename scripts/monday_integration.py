@@ -220,7 +220,6 @@ class MondayDevIntegration:
                 id
                 column_values {
                     id
-                    title
                     text
                 }
             }
@@ -232,7 +231,8 @@ class MondayDevIntegration:
         
         if result["items"]:
             for col_val in result["items"][0]["column_values"]:
-                if col_val["title"].lower() in ["notes", "updates", "long text"]:
+                # Look for longer text content (likely notes field)
+                if col_val["text"] and len(col_val["text"]) > 20:
                     return col_val["text"] or ""
         
         return ""
