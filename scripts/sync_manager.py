@@ -70,16 +70,28 @@ class SyncManager:
                         elif text and len(text) < 50:  # Likely area/category
                             area = text
                     
-                    # Create GitHub issue
+                    # Create GitHub issue with enhanced information
                     issue_body = f"""**Monday.com Task**: {task_id}
 **Priority**: {priority.title()}
 **Status**: {status}
 **Area**: {area}
 
-This issue was automatically synced from Monday.com board.
+## Task Details
+This issue was automatically synced from Monday.com board for tracking development progress.
+
+## Development Progress
+- [ ] Initial analysis and planning
+- [ ] Implementation
+- [ ] Testing and validation
+- [ ] Code review
+- [ ] Deployment
+
+## Commit History
+*Commits linked to this task will appear here automatically*
 
 ---
-*Synced on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*"""
+*Auto-synced from Monday.com on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*
+*Board: Product Backlog (RICE Methodology)*"""
                     
                     # Create issue with Monday ID in title for tracking
                     issue_title = f"{task_name} [Monday-{task_id}]"
@@ -220,6 +232,55 @@ This issue was automatically synced from Monday.com board.
             
         except Exception as e:
             print(f"❌ Error getting sync status: {e}")
+    
+    def update_github_issue_with_commit(self, task_id: str, commit_hash: str, commit_message: str):
+        """Update corresponding GitHub issue with commit information"""
+        try:
+            # Find the GitHub issue for this Monday task
+            issues = self.github.get_repository_issues()
+            target_issue = None
+            
+            for issue in issues:
+                if f"Monday-{task_id}" in issue['title']:
+                    target_issue = issue
+                    break
+            
+            if not target_issue:
+                print(f"⚠️  No GitHub issue found for Monday task {task_id}")
+                return False
+            
+            # Update the issue description with commit information
+            current_body = target_issue.get('body', '')
+            
+            # Add commit to the commit history section
+            commit_entry = f"\n### Commit {commit_hash[:8]} - {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+            commit_entry += f"```\n{commit_message}\n```\n"
+            
+            # Find the commit history section and add the new commit
+            if "## Commit History" in current_body:
+                # Replace the placeholder text with actual commit
+                updated_body = current_body.replace(
+                    "*Commits linked to this task will appear here automatically*",
+                    f"*Latest commits for this task:*{commit_entry}"
+                )
+                # If there are already commits, add to them
+                if "*Latest commits for this task:*" in current_body:
+                    commit_section_start = updated_body.find("*Latest commits for this task:*")
+                    if commit_section_start != -1:
+                        insert_point = updated_body.find("\n---", commit_section_start)
+                        if insert_point != -1:
+                            updated_body = updated_body[:insert_point] + commit_entry + updated_body[insert_point:]
+            else:
+                updated_body = current_body + f"\n\n## Commit History{commit_entry}"
+            
+            # Update the GitHub issue
+            self.github.update_issue(target_issue['number'], body=updated_body)
+            print(f"✅ Updated GitHub issue #{target_issue['number']} with commit {commit_hash[:8]}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error updating GitHub issue: {e}")
+            return False
 
 
 def main():

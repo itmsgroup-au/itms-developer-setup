@@ -181,7 +181,16 @@ class GitIntegration:
             
             # Update Monday.com task
             print(f"\n📋 Updating Monday.com task...")
-            self.monday.add_commit_update(task_id, commit_hash, commit_message)
+            result = self.monday.add_commit_update(task_id, commit_hash, commit_message)
+            
+            # Also update the corresponding GitHub issue
+            print(f"🐙 Updating GitHub issue...")
+            try:
+                from sync_manager import SyncManager
+                sync_manager = SyncManager()
+                sync_manager.update_github_issue_with_commit(task_id, commit_hash, commit_message)
+            except Exception as e:
+                print(f"⚠️  Could not update GitHub issue: {e}")
             
             print(f"✅ Task updated with commit information")
             

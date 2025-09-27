@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# ITMS Developer Setup Management Script
+# ITMS Developer Setup Management Script  
+# Complete Monday.com + GitHub + Context7 Integration
+# Architecture: Modular design following manage-odoo.sh patterns
 # Usage: ./manage-dev.sh [COMMAND] [ARGS...]
 
 # Load environment variables

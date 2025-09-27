@@ -2,6 +2,13 @@
 """
 Monday.com Integration for ITMS Developer Setup
 Handles task management with the new development board
+
+Architecture:
+- GraphQL API integration for Monday.com
+- Task CRUD operations with status mapping
+- Board-aware column handling (RICE methodology support)
+- Bidirectional sync with GitHub issues
+- Git commit linking with automatic status updates
 """
 
 import os
@@ -269,25 +276,25 @@ class MondayDevIntegration:
         """Add commit information to task"""
         
         try:
-            # Get current notes
-            current_updates = self.get_task_updates(item_id)
+            # Since this board doesn't support notes, try to update the status to "Ready for Development"
+            # This indicates progress has been made on the task
+            status_result = self.update_task(item_id, status="Ready for Development")
             
-            # Add new commit update
-            commit_update = f"""
-**Commit {commit_hash[:8]}** - {datetime.now().strftime('%Y-%m-%d %H:%M')}
-{commit_message}
-
----
-"""
+            print(f"✅ Commit {commit_hash[:8]} linked to task {item_id}")
+            print(f"📝 Task status updated to 'Ready for Development'")
+            print(f"💡 Detailed commit info stored in corresponding GitHub issue")
             
-            new_notes = commit_update + current_updates
+            return {
+                "status": "success",
+                "task_updated": True,
+                "commit_hash": commit_hash,
+                "message": "Status updated to Ready for Development"
+            }
             
-            return self.update_task(item_id, notes=new_notes)
         except Exception as e:
-            # If notes update fails (e.g., no long_text column), just update status
-            print(f"⚠️  Could not add notes to task (board may not support notes): {e}")
+            print(f"⚠️  Could not update task status: {e}")
             print(f"✅ Commit {commit_hash[:8]} still linked to task {item_id}")
-            return {"status": "commit_linked_without_notes"}
+            return {"status": "commit_linked_without_update"}
     
     def get_task_updates(self, item_id: str) -> str:
         """Get current task updates/notes"""
