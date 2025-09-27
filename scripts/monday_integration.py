@@ -102,9 +102,22 @@ class MondayDevIntegration:
         """Create a new development task"""
         
         # Prepare column values based on board structure
+        # Map our generic statuses to board-specific ones
+        status_mapping = {
+            "not started": "Under discovery",
+            "in progress": "Ready for Development", 
+            "blocked": "Needs information"
+        }
+        
+        priority_mapping = {
+            "high": "High",
+            "medium": "Medium", 
+            "low": "Low"
+        }
+        
         column_values = {
-            "status": {"label": "Not Started"},
-            "priority": {"label": priority.title()},
+            "status": {"label": status_mapping.get("not started", "Under discovery")},
+            "priority": {"label": priority_mapping.get(priority.lower(), "Medium")},
             "text": description,
             "date": datetime.now().strftime("%Y-%m-%d")
         }
@@ -147,7 +160,17 @@ class MondayDevIntegration:
         column_values = {}
         
         if status:
-            column_values["status"] = {"label": status}
+            # Map our generic statuses to board-specific ones
+            status_mapping = {
+                "not started": "Under discovery",
+                "in progress": "Ready for Development",
+                "blocked": "Needs information",
+                "under discovery": "Under discovery",
+                "ready for development": "Ready for Development", 
+                "needs information": "Needs information"
+            }
+            mapped_status = status_mapping.get(status.lower(), status)
+            column_values["status"] = {"label": mapped_status}
         
         if progress is not None:
             column_values["numbers"] = progress
@@ -156,7 +179,7 @@ class MondayDevIntegration:
             column_values["long_text"] = notes
         
         query = """
-        mutation ($board_id: ID!, $item_id: ID!, $column_values: JSON) {
+        mutation ($board_id: ID!, $item_id: ID!, $column_values: JSON!) {
             change_multiple_column_values (
                 board_id: $board_id,
                 item_id: $item_id,
@@ -169,6 +192,10 @@ class MondayDevIntegration:
         }
         """
         
+        # Only proceed if we have column values to update
+        if not column_values:
+            raise ValueError("No column values provided for update")
+        
         variables = {
             "board_id": self.board_id,
             "item_id": item_id,
@@ -177,22 +204,66 @@ class MondayDevIntegration:
         
         return self.make_query(query, variables)
     
-    def get_my_tasks(self, status_filter: str = None) -> list:
-        """Get current user's tasks"""
+    def get_my_tasks(self, status_filter: str = None, user_filter: bool = True) -> list:
+        """Get tasks, optionally filtered by current user and status"""
         board_data = self.get_board_info()
         items = board_data["boards"][0]["items_page"]["items"]
         
-        # Filter by status if provided
-        if status_filter:
-            filtered_items = []
-            for item in items:
-                for col_val in item["column_values"]:
-                    if col_val["title"].lower() == "status" and status_filter.lower() in col_val["text"].lower():
-                        filtered_items.append(item)
-                        break
-            items = filtered_items
+        # Get current user ID if user filtering is requested
+        current_user_id = None
+        if user_filter:
+            try:
+                user_query = """
+                query {
+                    me {
+                        id
+                        name
+                    }
+                }
+                """
+                user_result = self.make_query(user_query)
+                current_user_id = user_result.get("me", {}).get("id")
+            except:
+                # If we can't get user info, show all tasks
+                user_filter = False
         
-        return items
+        filtered_items = []
+        
+        for item in items:
+            # Check if task is assigned to current user (if filtering enabled)
+            if user_filter and current_user_id:
+                is_assigned = False
+                for col_val in item["column_values"]:
+                    if col_val.get("value"):
+                        try:
+                            value_data = json.loads(col_val["value"])
+                            if isinstance(value_data, dict) and "personsAndTeams" in value_data:
+                                persons = value_data["personsAndTeams"]
+                                for person in persons:
+                                    if str(person.get("id")) == str(current_user_id):
+                                        is_assigned = True
+                                        break
+                        except (json.JSONDecodeError, KeyError):
+                            continue
+                
+                if not is_assigned:
+                    continue
+            
+            # Filter by status if provided
+            if status_filter:
+                status_match = False
+                for col_val in item["column_values"]:
+                    text = col_val.get("text", "")
+                    if text and status_filter.lower() in text.lower():
+                        status_match = True
+                        break
+                
+                if not status_match:
+                    continue
+            
+            filtered_items.append(item)
+        
+        return filtered_items
     
     def add_commit_update(self, item_id: str, commit_hash: str, commit_message: str) -> dict:
         """Add commit information to task"""

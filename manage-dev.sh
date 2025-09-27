@@ -23,10 +23,10 @@ NC='\033[0m' # No Color
 
 # Header
 print_header() {
-    echo -e "${BLUE}╔══════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║             ITMS Developer Setup                 ║${NC}"
-    echo -e "${BLUE}║    Monday.com + GitHub + Context7 Integration    ║${NC}"
-    echo -e "${BLUE}╚══════════════════════════════════════════════════╝${NC}"
+    echo -e "${CYAN}╔══════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║             ITMS Developer Setup                 ║${NC}"
+    echo -e "${CYAN}║    Monday.com + GitHub + Context7 Integration    ║${NC}"
+    echo -e "${CYAN}╚══════════════════════════════════════════════════╝${NC}"
     echo ""
 }
 
@@ -87,7 +87,7 @@ test_integrations() {
 # Function to show current tasks
 show_tasks() {
     print_header
-    echo -e "${BLUE}📋 Current Development Tasks${NC}"
+    echo -e "${GREEN}📋 Current Development Tasks${NC}"
     echo ""
     
     python3 "$PYTHON_SCRIPTS_DIR/task_manager.py" show-current
@@ -96,7 +96,7 @@ show_tasks() {
 # Function to pull tasks from Monday
 pull_tasks() {
     print_header
-    echo -e "${BLUE}📥 Pulling Tasks from Monday.com${NC}"
+    echo -e "${GREEN}📥 Pulling Tasks from Monday.com${NC}"
     echo ""
     
     python3 "$PYTHON_SCRIPTS_DIR/task_manager.py" pull-from-monday
@@ -105,7 +105,7 @@ pull_tasks() {
 # Function to create new task
 create_task() {
     print_header
-    echo -e "${BLUE}➕ Create New Development Task${NC}"
+    echo -e "${GREEN}➕ Create New Development Task${NC}"
     echo ""
     
     if [ -z "$2" ]; then
@@ -124,7 +124,7 @@ create_task() {
 # Function to update task progress
 update_task() {
     print_header
-    echo -e "${BLUE}📝 Update Task Progress${NC}"
+    echo -e "${GREEN}📝 Update Task Progress${NC}"
     echo ""
     
     if [ -z "$2" ]; then
@@ -142,7 +142,7 @@ update_task() {
 # Function to commit with task linking
 commit_to_task() {
     print_header
-    echo -e "${BLUE}💾 Commit Changes to Task${NC}"
+    echo -e "${GREEN}💾 Commit Changes to Task${NC}"
     echo ""
     
     if [ -z "$2" ]; then
@@ -158,7 +158,7 @@ commit_to_task() {
 # Function to sync Monday and GitHub
 sync_platforms() {
     print_header
-    echo -e "${BLUE}🔄 Syncing Monday.com ↔ GitHub${NC}"
+    echo -e "${GREEN}🔄 Syncing Monday.com ↔ GitHub${NC}"
     echo ""
     
     DIRECTION="${2:-both}"
@@ -202,10 +202,71 @@ create_upgrade() {
 # Function to show development dashboard
 show_dashboard() {
     print_header
-    echo -e "${BLUE}📊 Development Dashboard${NC}"
+    echo -e "${GREEN}📊 Development Dashboard${NC}"
     echo ""
     
     python3 "$PYTHON_SCRIPTS_DIR/dashboard.py" show-full
+}
+
+# Function to list available boards
+list_boards() {
+    print_header
+    echo -e "${GREEN}📋 Available Monday.com Boards${NC}"
+    echo ""
+    
+    # Check if search term provided
+    SEARCH_TERM="$2"
+    if [ -n "$SEARCH_TERM" ]; then
+        echo -e "${CYAN}🔍 Searching for boards containing: \"$SEARCH_TERM\"${NC}"
+        echo ""
+        python3 "$PYTHON_SCRIPTS_DIR/dashboard.py" list-boards "$SEARCH_TERM"
+    else
+        python3 "$PYTHON_SCRIPTS_DIR/dashboard.py" list-boards
+    fi
+}
+
+# Function to connect to a board
+connect_board() {
+    print_header
+    echo -e "${GREEN}🔗 Connect to Monday.com Board${NC}"
+    echo ""
+    
+    if [ -z "$2" ]; then
+        echo -e "${YELLOW}Usage: $0 connect-board <board_id>${NC}"
+        echo ""
+        echo -e "${CYAN}First list available boards:${NC}"
+        echo "  $0 list-boards"
+        echo ""
+        echo -e "${CYAN}Then connect to a specific board:${NC}"
+        echo "  $0 connect-board 7970370827"
+        return
+    fi
+    
+    BOARD_ID="$2"
+    python3 "$PYTHON_SCRIPTS_DIR/dashboard.py" connect "$BOARD_ID"
+    
+    # If connection successful, offer to update .env
+    if [ $? -eq 0 ]; then
+        echo ""
+        echo -e "${YELLOW}💡 To make this change permanent:${NC}"
+        echo -e "${CYAN}Update your .env file:${NC}"
+        echo "MONDAY_BOARD_ID=$BOARD_ID"
+        echo ""
+        read -p "Update .env file now? (y/N): " update_env
+        if [[ $update_env =~ ^[Yy]$ ]]; then
+            # Update .env file
+            if [ -f .env ]; then
+                # Remove existing MONDAY_BOARD_ID line and add new one
+                grep -v "^MONDAY_BOARD_ID=" .env > .env.tmp
+                echo "MONDAY_BOARD_ID=$BOARD_ID" >> .env.tmp
+                mv .env.tmp .env
+                echo -e "${GREEN}✅ .env file updated successfully!${NC}"
+                echo -e "${CYAN}Board $BOARD_ID is now your default board.${NC}"
+            else
+                echo -e "${RED}❌ .env file not found${NC}"
+            fi
+        fi
+    fi
 }
 
 # Function to initialize repository
@@ -265,6 +326,10 @@ show_usage() {
     echo "  test                 - Test all integrations"
     echo "  dashboard            - Show development dashboard"
     echo ""
+    echo -e "${BLUE}📋 Board Management:${NC}"
+    echo "  list-boards [search] - List Monday.com boards (optional search filter)"
+    echo "  connect-board <id>   - Connect to a specific board"
+    echo ""
     echo -e "${BLUE}📋 Task Management:${NC}"
     echo "  show-tasks           - Show current tasks"
     echo "  pull-tasks           - Pull tasks from Monday.com"
@@ -288,6 +353,10 @@ show_usage() {
     echo "  GitHub: https://github.com/itmsgroup-au/itms-developer-setup"
     echo ""
     echo -e "${CYAN}Examples:${NC}"
+    echo "  $0 list-boards                                    # List all available boards"
+    echo "  $0 list-boards dev                                # Search for boards with 'dev'"
+    echo "  $0 list-boards odoo                               # Search for boards with 'odoo'"
+    echo "  $0 connect-board 7970370827                       # Connect to specific board"
     echo "  $0 create-task \"Fix login bug\" \"Security issue\" high"
     echo "  $0 odoo-module itms_new_feature enhancement high"
     echo "  $0 commit-task 12345 \"Implemented user authentication\""
@@ -317,6 +386,8 @@ case "$1" in
     init) init_repo ;;
     test) test_integrations ;;
     dashboard) show_dashboard ;;
+    list-boards) list_boards "$@" ;;
+    connect-board) connect_board "$@" ;;
     show-tasks) show_tasks ;;
     pull-tasks) pull_tasks ;;
     create-task) create_task "$@" ;;

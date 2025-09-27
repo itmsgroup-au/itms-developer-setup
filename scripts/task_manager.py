@@ -27,11 +27,17 @@ class TaskManager:
         print("=" * 50)
         
         try:
-            tasks = self.monday.get_my_tasks()
+            # First try to get user-assigned tasks
+            tasks = self.monday.get_my_tasks(user_filter=True)
             
+            # If no assigned tasks found, show all tasks
             if not tasks:
-                print("🎉 No tasks found. Use 'create-task' to add new tasks.")
-                return
+                print("📋 No tasks assigned to you. Showing all board tasks:\n")
+                tasks = self.monday.get_my_tasks(user_filter=False)
+                
+                if not tasks:
+                    print("🎉 No tasks found on this board. Use 'create-task' to add new tasks.")
+                    return
             
             # Group tasks by status
             task_groups = {}
