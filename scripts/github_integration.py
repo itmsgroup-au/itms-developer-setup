@@ -56,6 +56,85 @@ class GitHubIntegration:
         except Exception as e:
             print(f"❌ GitHub connection error: {e}")
             return False
+    
+    def get_repository_issues(self, state="open"):
+        """Get repository issues"""
+        if not self.repo:
+            raise ValueError("GITHUB_REPO not configured")
+        
+        try:
+            url = f"https://api.github.com/repos/{self.repo}/issues"
+            params = {"state": state, "per_page": 100}
+            
+            response = requests.get(url, headers=self.headers, params=params)
+            response.raise_for_status()
+            
+            issues = response.json()
+            # Filter out pull requests (GitHub API returns PRs as issues)
+            issues = [issue for issue in issues if not issue.get('pull_request')]
+            
+            return issues
+            
+        except Exception as e:
+            raise Exception(f"Failed to get repository issues: {e}")
+    
+    def create_issue(self, title, body, priority="medium"):
+        """Create a GitHub issue"""
+        if not self.repo:
+            raise ValueError("GITHUB_REPO not configured")
+        
+        try:
+            url = f"https://api.github.com/repos/{self.repo}/issues"
+            
+            # Map priority to labels
+            labels = []
+            if priority.lower() == "high":
+                labels.append("high priority")
+            elif priority.lower() == "low":
+                labels.append("low priority")
+            else:
+                labels.append("medium priority")
+            
+            # Add enhancement label for new features
+            labels.append("enhancement")
+            
+            data = {
+                "title": title,
+                "body": body,
+                "labels": labels
+            }
+            
+            response = requests.post(url, headers=self.headers, json=data)
+            response.raise_for_status()
+            
+            return response.json()
+            
+        except Exception as e:
+            raise Exception(f"Failed to create GitHub issue: {e}")
+    
+    def update_issue(self, issue_number, title=None, body=None, state=None):
+        """Update a GitHub issue"""
+        if not self.repo:
+            raise ValueError("GITHUB_REPO not configured")
+        
+        try:
+            url = f"https://api.github.com/repos/{self.repo}/issues/{issue_number}"
+            
+            data = {}
+            if title:
+                data["title"] = title
+            if body:
+                data["body"] = body
+            if state:
+                data["state"] = state
+            
+            response = requests.patch(url, headers=self.headers, json=data)
+            response.raise_for_status()
+            
+            return response.json()
+            
+        except Exception as e:
+            raise Exception(f"Failed to update GitHub issue: {e}")
 
 
 def main():

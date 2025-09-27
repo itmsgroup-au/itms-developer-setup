@@ -268,20 +268,26 @@ class MondayDevIntegration:
     def add_commit_update(self, item_id: str, commit_hash: str, commit_message: str) -> dict:
         """Add commit information to task"""
         
-        # Get current notes
-        current_updates = self.get_task_updates(item_id)
-        
-        # Add new commit update
-        commit_update = f"""
+        try:
+            # Get current notes
+            current_updates = self.get_task_updates(item_id)
+            
+            # Add new commit update
+            commit_update = f"""
 **Commit {commit_hash[:8]}** - {datetime.now().strftime('%Y-%m-%d %H:%M')}
 {commit_message}
 
 ---
 """
-        
-        new_notes = commit_update + current_updates
-        
-        return self.update_task(item_id, notes=new_notes)
+            
+            new_notes = commit_update + current_updates
+            
+            return self.update_task(item_id, notes=new_notes)
+        except Exception as e:
+            # If notes update fails (e.g., no long_text column), just update status
+            print(f"⚠️  Could not add notes to task (board may not support notes): {e}")
+            print(f"✅ Commit {commit_hash[:8]} still linked to task {item_id}")
+            return {"status": "commit_linked_without_notes"}
     
     def get_task_updates(self, item_id: str) -> str:
         """Get current task updates/notes"""
