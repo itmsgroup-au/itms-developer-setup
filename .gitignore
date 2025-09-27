@@ -1,0 +1,55 @@
+# ITMS Developer Setup - Git Ignore
+
+# Environment configuration
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Local development
+local/
+test_data/
+
+# Sensitive data
+*.key
+*.pem
+secrets/
