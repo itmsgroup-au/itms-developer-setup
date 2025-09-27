@@ -71,6 +71,65 @@ class GitIntegration:
         except Exception as e:
             return {"error": str(e)}
     
+    def get_branch_info(self):
+        """Get detailed branch information"""
+        try:
+            info = {}
+            
+            # Current branch
+            info["current_branch"] = self._run_git_command(['git', 'branch', '--show-current'])
+            
+            # Check if we have an upstream branch
+            try:
+                info["upstream"] = self._run_git_command(['git', 'rev-parse', '--abbrev-ref', '@{upstream}'])
+                
+                # Check ahead/behind status
+                ahead_behind = self._run_git_command(['git', 'rev-list', '--left-right', '--count', 'HEAD...@{upstream}'])
+                if ahead_behind:
+                    parts = ahead_behind.split('\t')
+                    if len(parts) == 2:
+                        info["ahead"] = int(parts[0])
+                        info["behind"] = int(parts[1])
+            except:
+                info["upstream"] = None
+                info["ahead"] = 0
+                info["behind"] = 0
+            
+            # Get recent commits
+            recent_commits = self._run_git_command(['git', 'log', '--oneline', '-5'])
+            info["recent_commits"] = recent_commits.split('\n') if recent_commits else []
+            
+            return info
+            
+        except Exception as e:
+            return {"error": str(e)}
+    
+    def get_commit_for_task(self, task_id: str):
+        """Get commits associated with a specific task"""
+        try:
+            # Search for commits mentioning the task ID
+            search_output = self._run_git_command([
+                'git', 'log', '--grep', task_id, '--oneline', '--all'
+            ])
+            
+            if not search_output:
+                return []
+            
+            commits = []
+            for line in search_output.split('\n'):
+                if line.strip():
+                    parts = line.split(' ', 1)
+                    if len(parts) == 2:
+                        commits.append({
+                            "hash": parts[0],
+                            "message": parts[1]
+                        })
+            
+            return commits
+            
+        except Exception as e:
+            return {"error": str(e)}
+    
     def commit_to_task(self, task_id: str, commit_message: str, auto_stage: bool = True):
         """Commit changes and link to Monday.com task"""
         

@@ -21,7 +21,24 @@ cp .env.template .env
 
 ### 3. Test Integration
 ```bash
-./manage-dev.sh test
+./manage-dev.sh test                    # Test all connections
+./manage-dev.sh list-boards             # List available Monday.com boards
+./manage-dev.sh connect-board <id>      # Connect to your project board
+./manage-dev.sh dashboard               # View project overview
+```
+
+## 🔗 **Git Workflow Integration**
+
+### Advanced Git Features
+```bash
+# Link commits to Monday.com tasks
+./manage-dev.sh commit-task <task_id> "Your commit message"
+
+# View git branch information
+python3 scripts/git_integration.py branch-info
+
+# Find commits for specific task
+python3 scripts/git_integration.py task-commits <task_id>
 ```
 
 ### 4. Start Development
