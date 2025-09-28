@@ -29,19 +29,30 @@ Your ITMS setup now has **TWO different but complementary** Odoo integrations:
 **Purpose:** Browse and interact with Odoo models/records via AI tools
 
 **What it does:**
-- Queries Odoo models and records
+- Queries Odoo models and records via XML-RPC
 - Browses database structure
 - Integrates with Claude/Cursor for AI assistance
 - Provides read-only access to Odoo data
 
+**⚠️ CRITICAL: XML-RPC Configuration Required**
+
+For XML-RPC to work in Odoo 18 Enterprise, you MUST include `base` in server_wide_modules:
+
+```ini
+# In your odoo18-enterprise.conf
+server_wide_modules = web,queue_job,base
+xmlrpc = True
+xmlrpc_interface = 0.0.0.0
+```
+
 **Configuration:** `odoo_config.json`
 ```json
 {
-  "odoo_url": "http://localhost:8018",
-  "odoo_db": "BIGQUERY", 
-  "odoo_username": "mark",
-  "odoo_password": "mark",
-  "odoo_version": "18.0"
+  "url": "http://localhost:8018",
+  "db": "BIGQUERY",
+  "username": "mark",
+  "password": "mark",
+  "version": "18.0"
 }
 ```
 
@@ -80,6 +91,52 @@ Your ITMS setup now has **TWO different but complementary** Odoo integrations:
 - All MCP servers update automatically when you switch projects
 - Odoo configuration updates when you change instances
 - PostgreSQL connection matches your Postgres.app setup
+
+## 🚨 **Troubleshooting XML-RPC Issues**
+
+### **Problem: MCP Odoo servers show red dots, XML-RPC returns 404 errors**
+
+**Root Cause:** Odoo 18 Enterprise requires the `base` module in `server_wide_modules` for XML-RPC endpoints to be available.
+
+**Solution:**
+
+1. **Edit your Odoo configuration:**
+   ```bash
+   nano /Users/markshaw/Desktop/git/odoo/config/odoo18-enterprise.conf
+   ```
+
+2. **Update server_wide_modules line:**
+   ```ini
+   # Change from:
+   server_wide_modules = web,queue_job
+
+   # To:
+   server_wide_modules = web,queue_job,base
+
+   # Also ensure XML-RPC is enabled:
+   xmlrpc = True
+   xmlrpc_interface = 0.0.0.0
+   ```
+
+3. **Restart Odoo:**
+   ```bash
+   /Users/markshaw/Desktop/git/odoo/manage-odoo.sh restart-enterprise18
+   ```
+
+4. **Test XML-RPC is working:**
+   ```python
+   import xmlrpc.client
+   common = xmlrpc.client.ServerProxy('http://localhost:8018/xmlrpc/2/common')
+   print(common.version())  # Should return version info
+
+   # Test authentication
+   uid = common.authenticate('BIGQUERY', 'mark', 'mark', {})
+   print(f'UID: {uid}')  # Should return user ID (e.g., 2)
+   ```
+
+5. **Restart Claude/Cursor** to refresh MCP server connections
+
+**Expected Result:** Odoo MCP servers should now show green dots and be fully functional.
 
 ## Troubleshooting
 
