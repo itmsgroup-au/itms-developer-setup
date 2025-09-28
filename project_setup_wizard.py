@@ -475,7 +475,7 @@ class ProjectSetupWizard:
         print("2. Verify all MCP servers show green status:")
         print("   ✅ itms-workflow (Monday.com integration)")
         print("   ✅ postgresql (Database queries)")
-        print("   ✅ odoo & odoo-browse (Odoo integration)")
+        print("   ✅ odoo (Odoo integration)")
         print("   ✅ context7 (Documentation search)")
         print("3. If Odoo MCP servers show red, ensure Odoo is running:")
         print(f"   ▶️  Start: /Users/markshaw/Desktop/git/odoo/manage-odoo.sh start-{config['odoo']['instance_key']}")

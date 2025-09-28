@@ -375,7 +375,7 @@ class ProjectContextManager:
         
         # Odoo MCP server (GitHub mcp-odoo for browsing models/records)
         config.append({
-            "name": "odoo-browse",
+            "name": "odoo",
             "command": "npx -y mcp-odoo",
             "arguments": "",
             "useShellInterpolation": True,
@@ -383,7 +383,9 @@ class ProjectContextManager:
                 "ODOO_URL": os.getenv('ODOO_URL', 'http://localhost:8018'),
                 "ODOO_DB": os.getenv('ODOO_DB', 'BIGQUERY'),
                 "ODOO_USERNAME": os.getenv('ODOO_USERNAME', 'mark'),
-                "ODOO_PASSWORD": os.getenv('ODOO_PASSWORD', 'mark')
+                "ODOO_PASSWORD": os.getenv('ODOO_PASSWORD', 'mark'),
+                "ODOO_ADMIN_PASSWD": os.getenv('ODOO_ADMIN_PASSWD', 'itmsadmin'),
+                "ODOO_PATH": os.getenv('ODOO_PATH', '/Users/markshaw/Desktop/git/odoo')
             },
             "id": "odoo-mcp-server",
             "tools": [],
@@ -429,14 +431,16 @@ class ProjectContextManager:
         }
         
         # Odoo MCP server (GitHub mcp-odoo for browsing models/records)
-        servers['odoo-browse'] = {
+        servers['odoo'] = {
             "command": "npx",
             "args": ["-y", "mcp-odoo"],
             "env": {
                 "ODOO_URL": os.getenv('ODOO_URL', 'http://localhost:8018'),
                 "ODOO_DB": os.getenv('ODOO_DB', 'BIGQUERY'),
                 "ODOO_USERNAME": os.getenv('ODOO_USERNAME', 'mark'),
-                "ODOO_PASSWORD": os.getenv('ODOO_PASSWORD', 'mark')
+                "ODOO_PASSWORD": os.getenv('ODOO_PASSWORD', 'mark'),
+                "ODOO_ADMIN_PASSWD": os.getenv('ODOO_ADMIN_PASSWD', 'itmsadmin'),
+                "ODOO_PATH": os.getenv('ODOO_PATH', '/Users/markshaw/Desktop/git/odoo')
             }
         }
         

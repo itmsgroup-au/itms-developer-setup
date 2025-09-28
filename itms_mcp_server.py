@@ -11,6 +11,37 @@ from pathlib import Path
 import requests
 from datetime import datetime
 
+# Load environment variables from .env file
+def load_env_file():
+    """Load environment variables from .env file"""
+    try:
+        # Try current directory first
+        env_file = Path('.env')
+        if not env_file.exists():
+            # Try script directory
+            env_file = Path(__file__).parent / '.env'
+
+        if env_file.exists():
+            with open(env_file, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        key, value = line.split('=', 1)
+                        os.environ[key] = value
+    except NameError:
+        # __file__ not available, try current directory only
+        env_file = Path('.env')
+        if env_file.exists():
+            with open(env_file, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        key, value = line.split('=', 1)
+                        os.environ[key] = value
+
+# Load .env file on import
+load_env_file()
+
 class ITMSMCPServer:
     """Simple MCP server for ITMS workflow integration"""
     
@@ -22,11 +53,12 @@ class ITMSMCPServer:
     def handle_request(self, request):
         """Handle MCP requests"""
         method = request.get('method', '')
-        
+        request_id = request.get('id')
+
         if method == 'initialize':
             return {
                 "jsonrpc": "2.0",
-                "id": request.get('id'),
+                "id": request_id,
                 "result": {
                     "protocolVersion": "2024-11-05",
                     "capabilities": {
@@ -38,11 +70,15 @@ class ITMSMCPServer:
                     }
                 }
             }
+
+        elif method == 'notifications/initialized':
+            # MCP initialization complete notification - no response needed
+            return None
         
         elif method == 'tools/list':
             return {
                 "jsonrpc": "2.0",
-                "id": request.get('id'),
+                "id": request_id,
                 "result": {
                     "tools": [
                         {
@@ -88,8 +124,10 @@ class ITMSMCPServer:
                 return self.create_monday_task(request)
             elif tool_name == 'workflow_status':
                 return self.get_workflow_status(request)
-        
-        return {"jsonrpc": "2.0", "id": request.get('id'), "error": {"code": -32601, "message": "Method not found"}}
+            else:
+                return {"jsonrpc": "2.0", "id": request_id, "error": {"code": -32601, "message": f"Unknown tool: {tool_name}"}}
+
+        return {"jsonrpc": "2.0", "id": request_id, "error": {"code": -32601, "message": "Method not found"}}
     
     def get_monday_tasks(self, request):
         """Get Monday.com tasks"""
@@ -202,21 +240,42 @@ class ITMSMCPServer:
 def main():
     """Main MCP server loop"""
     server = ITMSMCPServer()
-    
-    for line in sys.stdin:
-        try:
-            request = json.loads(line.strip())
-            response = server.handle_request(request)
-            print(json.dumps(response))
-            sys.stdout.flush()
-        except Exception as e:
-            error_response = {
-                "jsonrpc": "2.0",
-                "id": None,
-                "error": {"code": -32700, "message": f"Parse error: {e}"}
-            }
-            print(json.dumps(error_response))
-            sys.stdout.flush()
+
+    try:
+        for line in sys.stdin:
+            line = line.strip()
+            if not line:
+                continue
+
+            try:
+                request = json.loads(line)
+                response = server.handle_request(request)
+
+                # Only send response if there is one (some notifications don't need responses)
+                if response is not None:
+                    print(json.dumps(response))
+                    sys.stdout.flush()
+
+            except json.JSONDecodeError as e:
+                error_response = {
+                    "jsonrpc": "2.0",
+                    "id": None,
+                    "error": {"code": -32700, "message": f"Parse error: {e}"}
+                }
+                print(json.dumps(error_response))
+                sys.stdout.flush()
+            except Exception as e:
+                error_response = {
+                    "jsonrpc": "2.0",
+                    "id": None,
+                    "error": {"code": -32603, "message": f"Internal error: {e}"}
+                }
+                print(json.dumps(error_response))
+                sys.stdout.flush()
+    except KeyboardInterrupt:
+        pass
+    except EOFError:
+        pass
 
 if __name__ == '__main__':
     main()
