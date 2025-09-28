@@ -40,7 +40,11 @@ def load_env_file():
                         os.environ[key] = value
 
 # Load .env file on import
-load_env_file()
+try:
+    load_env_file()
+except Exception as e:
+    # Don't let env loading break the server
+    pass
 
 class ITMSMCPServer:
     """Simple MCP server for ITMS workflow integration"""
