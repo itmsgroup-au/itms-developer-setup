@@ -1,0 +1,25 @@
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "v$version"
+changelog_file = "HISTORY.rst"
+
+[tool.towncrier]
+filename = "HISTORY.rst"
+directory = "newsfragments"
+title_format = "## {version} ({project_date})"
+underlines = "-"
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  migrations/
+  | __pycache__/
+  | \.git/
+  | \.venv/
+  | build/
+  | dist/
+)/
+'''

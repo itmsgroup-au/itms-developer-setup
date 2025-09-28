@@ -1,0 +1,87 @@
+developer:
+  name: ${DEVELOPER_NAME:-"Maek Shaw"}
+  email: ${DEVELOPER_EMAIL:-"mark.shaw@itmsgroup.com.au"}
+paths:
+  git_root: ${GIT_ROOT:-"~/Desktop/git"}
+  odoo_root: ${ODOO_ROOT:-"${GIT_ROOT}/odoo"}
+  odoo_18: ${ODOO_18_PATH:-"${ODOO_ROOT}/odoo18-server"}
+  odoo_19: ${ODOO_19_PATH:-"${ODOO_ROOT}/odoo19-server"}
+  marco_odoo: ${MARCO_ODOO_PATH:-"${GIT_ROOT}/marco_odoo"}
+  itms_setup: ${ITMS_SETUP_PATH:-"${GIT_ROOT}/itms-developer-setup"}
+  temp_dir: ${TEMP_DIR:-"/tmp/odoo_work"}
+  backup_dir: ${BACKUP_DIR:-"${GIT_ROOT}/.backups"}
+apis:
+  monday:
+    token: ${MONDAY_API_TOKEN}
+    board_id: ${{'MONDAY_BOARD_ID'}:-'18058278926'}
+    board_url: https://itmsgroup-squad.monday.com/boards/${MONDAY_BOARD_ID}
+  github:
+    token: ${GITHUB_TOKEN}
+    username: ${GITHUB_USERNAME}
+    org: ${GITHUB_ORG:-"itmsgroup-au"}
+    repo: ${GITHUB_REPO:-""}
+    base_url: https://github.com/${GITHUB_ORG}/
+  context7:
+    api_key: ${CONTEXT7_API_KEY}
+    base_url: https://context7.com/api/v1
+tools:
+  black:
+    enabled: true
+    line_length: 88
+    target_version:
+    - py38
+  ruff:
+    enabled: true
+    config: .ruff.toml
+    odoo_plugin: ruff-odoo
+  git_hooks:
+    enabled: true
+    pre_commit: true
+    commit_msg: true
+    formats:
+    - black
+    - ruff-odoo
+workflow:
+  default_from_version: '18.0'
+  default_to_version: '19.0'
+  testing:
+    installation:
+      automation: 100
+      required: true
+    functionality:
+      automation: 85
+      required: true
+    integration:
+      automation: 60
+      required: true
+    ui_ux:
+      automation: 30
+      required: false
+  quality:
+    black_compliance: 100
+    pylint_score: 8.5
+    test_coverage: 70
+    security_issues: 0
+team:
+  module_prefix: itms_
+  docs:
+    readme_required: true
+    changelog_required: true
+    oca_compliance: true
+  git:
+    commit_format: conventional
+    branch_naming: feature/TASK-123-description
+    pr_template: true
+integrations:
+  warp:
+    enabled: true
+    context_sharing: true
+  cursor:
+    workspace_sync: true
+    ai_guidelines: true
+  monday:
+    auto_task_creation: true
+    progress_sync: true
+  context7:
+    memory_sync: true
+    guideline_sharing: true
