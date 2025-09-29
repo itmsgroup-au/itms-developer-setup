@@ -64,6 +64,7 @@ class ProjectContextManager:
         self.current_context = context
         self.update_all_mcp_configs()
         self.update_env_file()
+        self.update_odoo_server_configs()
         
         # Update Odoo MCP config if this context has Odoo info
         if hasattr(context, 'get') and context.get('odoo'):
@@ -261,6 +262,60 @@ class ProjectContextManager:
                     lines.append(f'{key}={value}')
         
         env_file.write_text('\n'.join(lines))
+    
+    def update_odoo_server_configs(self):
+        """Update Odoo server config files with default database from .env"""
+        try:
+            # Get database name from .env
+            env_file = self.setup_dir / '.env'
+            if not env_file.exists():
+                return
+            
+            content = env_file.read_text()
+            db_name = None
+            
+            for line in content.split('\n'):
+                if line.strip().startswith('ODOO_DB='):
+                    db_name = line.split('=', 1)[1].strip()
+                    break
+            
+            if not db_name:
+                return
+            
+            # Update all Odoo config files
+            odoo_config_paths = [
+                '/Users/markshaw/Desktop/git/odoo/config/odoo18-enterprise.conf',
+                '/Users/markshaw/Desktop/git/odoo/config/odoo18-community.conf',
+                '/Users/markshaw/Desktop/git/odoo/config/odoo19-enterprise.conf',
+                '/Users/markshaw/Desktop/git/odoo/config/odoo19-community.conf'
+            ]
+            
+            updated_count = 0
+            for config_path in odoo_config_paths:
+                config_file = Path(config_path)
+                if config_file.exists():
+                    # Read current config
+                    content = config_file.read_text()
+                    lines = content.split('\n')
+                    
+                    # Update db_name line
+                    for i, line in enumerate(lines):
+                        if line.strip().startswith('db_name ='):
+                            old_value = line.split('=', 1)[1].strip()
+                            lines[i] = f'db_name = {db_name}'
+                            if old_value != db_name:
+                                print(f"✅ Updated {config_file.name}: db_name = {db_name}")
+                                updated_count += 1
+                            break
+                    
+                    # Write back the config
+                    config_file.write_text('\n'.join(lines))
+            
+            if updated_count > 0:
+                print(f"✅ Updated {updated_count} Odoo server config files with default database")
+                
+        except Exception as e:
+            print(f"⚠️  Failed to update Odoo server configs: {e}")
     
     def update_odoo_config_file(self, config: Dict):
         """Update odoo_config.json file with current project configuration"""

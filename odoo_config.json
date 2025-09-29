@@ -1,7 +1,7 @@
 {
   "url": "http://localhost:8018/odoo",
   "db": "BIGQUERY",
-  "username": "mark",
-  "password": "mark",
+  "username": "odoo",
+  "password": "",
   "version": "18.0"
 }

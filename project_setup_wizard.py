@@ -140,9 +140,10 @@ class ProjectSetupWizard:
         
         # Step 8: Update Odoo MCP config files  
         print("\n" + "="*50)
-        print("📝 STEP 8: Updating Odoo MCP Configuration Files")
+        print("📝 STEP 8: Updating Odoo Configuration Files")
         print("="*50)
         self.update_odoo_config_files(project_config)
+        self.update_odoo_server_config(project_config)
         
         # Step 9: Verify Odoo connectivity
         print("\n" + "="*50)
@@ -391,6 +392,46 @@ class ProjectSetupWizard:
             
         except Exception as e:
             print(f"❌ Failed to update Odoo config files: {e}")
+    
+    def update_odoo_server_config(self, config: Dict):
+        """Update Odoo server configuration file with default database"""
+        try:
+            instance_key = config['odoo']['instance_key']
+            db_name = config['odoo']['database']
+            
+            # Find the config file for this instance
+            config_file = None
+            for key, instance_config in self.odoo_instances.items():
+                if key == instance_key:
+                    config_file = Path(instance_config['config'])
+                    break
+            
+            if not config_file or not config_file.exists():
+                print(f"⚠️  Odoo config file not found for {instance_key}")
+                return
+            
+            # Read current config
+            content = config_file.read_text()
+            lines = content.split('\n')
+            
+            # Update db_name line
+            updated = False
+            for i, line in enumerate(lines):
+                if line.strip().startswith('db_name ='):
+                    lines[i] = f'db_name = {db_name}'
+                    updated = True
+                    print(f"✅ Set default database to: {db_name}")
+                    break
+            
+            if updated:
+                # Write back the config
+                config_file.write_text('\n'.join(lines))
+                print(f"✅ Updated Odoo server config: {config_file}")
+            else:
+                print(f"⚠️  Could not find db_name setting in {config_file}")
+                
+        except Exception as e:
+            print(f"❌ Failed to update Odoo server config: {e}")
     
     def verify_odoo_connection(self, config: Dict):
         """Verify Odoo connection and provide setup guidance"""

@@ -125,6 +125,7 @@ class ITMSWorkflow:
         print("21. 🏁 Complete workflow")
         print("22. 🧹 Clear active task")
         print("23. ⚙️  Setup/Config (Safe Mode)")
+        print("24. 📜 Start Odoo Log Viewer")
         print("0. ❌ Exit")
         print()
     
@@ -724,6 +725,50 @@ class ITMSWorkflow:
         
         print(f"✅ Active task '{task_name}' has been cleared")
     
+    def start_log_viewer(self):
+        """Start the Odoo log viewer web interface"""
+        import subprocess
+        import webbrowser
+        import time
+        
+        print("\n📜 Starting Odoo Log Viewer...")
+        print("This will start a web server to stream Odoo logs in real-time")
+        
+        log_viewer_script = Path(__file__).parent / "odoo_log_viewer.py"
+        if not log_viewer_script.exists():
+            print("❌ Log viewer script not found")
+            return
+        
+        try:
+            # Start the log viewer in background
+            print("🚀 Starting log viewer server...")
+            process = subprocess.Popen([
+                "python3", str(log_viewer_script)
+            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            
+            # Give it a moment to start
+            time.sleep(2)
+            
+            # Check if it's running
+            if process.poll() is None:
+                print("✅ Log viewer server started successfully")
+                print("🌐 Opening browser...")
+                webbrowser.open("http://127.0.0.1:5001")
+                print("\n📋 Log Viewer Instructions:")
+                print("• Select an Odoo instance from the dropdown")
+                print("• Click 'Start' to begin streaming logs")
+                print("• Auto-scroll keeps you at the latest logs")
+                print("• Press Ctrl+C in terminal to stop the server")
+                print("\n⚠️  Note: Keep this terminal open while using the log viewer")
+            else:
+                stdout, stderr = process.communicate()
+                print(f"❌ Failed to start log viewer:")
+                if stderr:
+                    print(f"Error: {stderr.decode()}")
+                
+        except Exception as e:
+            print(f"❌ Error starting log viewer: {e}")
+    
     def update_monday_status(self, item_id: str, status: str):
         """Update task status in Monday.com"""
         mutation = """
@@ -1054,6 +1099,10 @@ class ITMSWorkflow:
                     self.complete_workflow()
                 elif choice == '22':
                     self.clear_active_task()
+                elif choice == '23':
+                    self.safe_setup_config()
+                elif choice == '24':
+                    self.start_log_viewer()
                 else:
                     print("🔧 Invalid option or feature coming soon...")
                 
