@@ -13,7 +13,7 @@ paths:
 apis:
   monday:
     token: ${MONDAY_API_TOKEN}
-    board_id: ${{'MONDAY_BOARD_ID'}:-'18058278926'}
+    board_id: ${MONDAY_BOARD_ID:-18058278926}
     board_url: https://itmsgroup-squad.monday.com/boards/${MONDAY_BOARD_ID}
   github:
     token: ${GITHUB_TOKEN}

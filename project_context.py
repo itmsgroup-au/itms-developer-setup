@@ -392,27 +392,6 @@ class ProjectContextManager:
             "disabledTools": []
         })
         
-        # ITMS Workflow server
-        config.append({
-            "name": "itms-workflow",
-            "command": f"python3 {Path(__file__).parent / 'itms_mcp_server.py'}",
-            "arguments": "",
-            "useShellInterpolation": True,
-            "env": {
-                "MONDAY_API_TOKEN": os.getenv('MONDAY_API_TOKEN', ''),
-                "MONDAY_BOARD_ID": board_id,
-                "GITHUB_TOKEN": os.getenv('GITHUB_TOKEN', ''),
-                "GITHUB_REPO": repo_full_name,
-                "GITHUB_ORG": repo_owner,
-                "DEVELOPER_NAME": os.getenv('DEVELOPER_NAME', ''),
-                "DEVELOPER_EMAIL": os.getenv('DEVELOPER_EMAIL', ''),
-                "PROJECT_ROOT": os.getenv('PROJECT_ROOT', ''),
-                "ODOO_PATH": os.getenv('ODOO_PATH', '')
-            },
-            "id": "392cfb93-1930-433b-b039-2fa2441b1132",
-            "tools": [],
-            "disabledTools": []
-        })
         
         # PostgreSQL server (Augment format with proper arguments)
         config.append({
@@ -424,6 +403,18 @@ class ProjectContextManager:
                 "PG_PATH": "/Applications/Postgres.app/Contents/Versions/17/bin"
             },
             "id": "postgres-mcp-server",
+            "tools": [],
+            "disabledTools": []
+        })
+        
+        # Chrome DevTools MCP server for web performance testing (requires Node 22.12.0+)
+        config.append({
+            "name": "chrome-devtools",
+            "command": "npx -y chrome-devtools-mcp@latest",
+            "arguments": "",
+            "useShellInterpolation": True,
+            "env": {},
+            "id": "chrome-devtools-mcp-server",
             "tools": [],
             "disabledTools": []
         })
@@ -444,13 +435,14 @@ class ProjectContextManager:
             },
             "id": "odoo-mcp-server",
             "tools": [],
-            "disabledTools": []
+            "disabledTools": [],
+            "alwaysAllow": ["execute_method", "search_employee", "search_holidays"]
         })
         
         # ITMS Task Master (Enhanced workflow with task-master integration)
         config.append({
             "name": "itms-task-master",
-            "command": f"python3 {Path(__file__).parent / 'itms_mcp_enhanced.py'}",
+            "command": f"python3 {Path(__file__).parent / 'itms_mcp_server.py'}",
             "arguments": "",
             "useShellInterpolation": True,
             "env": {
@@ -468,12 +460,14 @@ class ProjectContextManager:
             "id": "itms-task-master",
             "tools": [],
             "disabledTools": [],
-            "alwaysAllow": ["get_assigned_tasks", "select_active_task", "create_subtasks"]
+            "alwaysAllow": ["get_assigned_tasks", "select_active_task", "create_subtasks", "get_monday_tasks", "create_monday_task", "workflow_status", "set_working_group", "clear_working_group"]
         })
     
     def update_standard_mcp_config(self, config: dict, board_id: str, repo_full_name: str, repo_owner: str):
         """Update standard MCP config with all servers"""
-        servers = config.setdefault('mcpServers', {})
+        # Clear existing servers and regenerate from scratch
+        config['mcpServers'] = {}
+        servers = config['mcpServers']
         
         # Context7 server
         servers['context7'] = {
@@ -482,23 +476,6 @@ class ProjectContextManager:
             "env": {"CONTEXT7_API_KEY": os.getenv('CONTEXT7_API_KEY', '')}
         }
         
-        # ITMS Workflow server
-        servers['itms-workflow'] = {
-            "command": "python3",
-            "args": [str(Path(__file__).parent / 'itms_mcp_server.py')],
-            "cwd": str(Path(__file__).parent),
-            "env": {
-                "MONDAY_API_TOKEN": os.getenv('MONDAY_API_TOKEN', ''),
-                "MONDAY_BOARD_ID": board_id,
-                "GITHUB_TOKEN": os.getenv('GITHUB_TOKEN', ''),
-                "GITHUB_REPO": repo_full_name,
-                "GITHUB_ORG": repo_owner,
-                "DEVELOPER_NAME": os.getenv('DEVELOPER_NAME', ''),
-                "DEVELOPER_EMAIL": os.getenv('DEVELOPER_EMAIL', ''),
-                "PROJECT_ROOT": os.getenv('PROJECT_ROOT', ''),
-                "ODOO_PATH": os.getenv('ODOO_PATH', '')
-            }
-        }
         
         # PostgreSQL server (fixed connection string format)
         servers['postgresql'] = {
@@ -523,10 +500,16 @@ class ProjectContextManager:
             }
         }
         
+        # Chrome DevTools MCP server for web performance testing (requires Node 22.12.0+)
+        servers['chrome-devtools'] = {
+            "command": "npx",
+            "args": ["-y", "chrome-devtools-mcp@latest"]
+        }
+        
         # ITMS Task Master (Enhanced workflow with task-master integration)
         servers['itms-task-master'] = {
             "command": "python3",
-            "args": [str(Path(__file__).parent / 'itms_mcp_enhanced.py')],
+            "args": [str(Path(__file__).parent / 'itms_mcp_server.py')],
             "cwd": str(Path(__file__).parent),
             "env": {
                 "MONDAY_API_TOKEN": os.getenv('MONDAY_API_TOKEN', ''),

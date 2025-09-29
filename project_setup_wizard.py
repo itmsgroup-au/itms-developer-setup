@@ -126,21 +126,30 @@ class ProjectSetupWizard:
             print("❌ Setup cancelled - database setup failed")
             return
         
-        # Step 5: PostgreSQL Access
+        # Step 5: Odoo Credentials
         print("\n" + "="*50)
-        print("🐘 STEP 5: PostgreSQL Access Verification")
+        print("🔐 STEP 5: Odoo User Credentials")
+        print("="*50)
+        odoo_user_config = self.setup_odoo_credentials(odoo_config, db_config)
+        if not odoo_user_config:
+            print("❌ Setup cancelled - Odoo credentials setup failed")
+            return
+        
+        # Step 6: PostgreSQL Access
+        print("\n" + "="*50)
+        print("🐘 STEP 6: PostgreSQL Access Verification")
         print("="*50)
         pg_config = self.verify_postgresql_access()
         
-        # Step 6: Save Configuration
+        # Step 7: Save Configuration
         print("\n" + "="*50)
-        print("💾 STEP 6: Saving Project Configuration")
+        print("💾 STEP 7: Saving Project Configuration")
         print("="*50)
-        project_config = self.save_project_config(board, group, repo, odoo_config, db_config, pg_config)
+        project_config = self.save_project_config(board, group, repo, odoo_config, db_config, odoo_user_config, pg_config)
         
-        # Step 7: Update MCP Servers
+        # Step 8: Update MCP Servers
         print("\n" + "="*50)
-        print("🔗 STEP 7: Updating MCP Server Configurations")
+        print("🔗 STEP 8: Updating MCP Server Configurations")
         print("="*50)
         self.update_mcp_configurations(project_config)
         
@@ -301,6 +310,53 @@ class ProjectSetupWizard:
             'port': 5432
         }
     
+    def setup_odoo_credentials(self, odoo_config: Dict, db_config: Dict) -> Optional[Dict]:
+        """Setup Odoo user credentials for database access"""
+        print(f"\n🔐 Odoo credentials for database: {db_config['name']}")
+        print("These credentials will be used by the Odoo MCP server to access your Odoo instance.")
+        
+        # Get Odoo username
+        default_username = "admin"
+        odoo_username = input(f"Odoo username [{default_username}]: ").strip() or default_username
+        
+        # Get Odoo password
+        import getpass
+        try:
+            odoo_password = getpass.getpass("Odoo password: ").strip()
+        except KeyboardInterrupt:
+            print("\n❌ Setup cancelled")
+            return None
+        
+        if not odoo_password:
+            print("❌ Odoo password required for MCP server access")
+            return None
+        
+        # Test connection to Odoo (optional)
+        test_connection = input("Test Odoo connection? (y/n) [y]: ").strip().lower()
+        if test_connection != 'n':
+            try:
+                import requests
+                login_url = f"{odoo_config['url']}/web/session/authenticate"
+                login_data = {
+                    'db': db_config['name'],
+                    'login': odoo_username,
+                    'password': odoo_password
+                }
+                response = requests.post(login_url, json=login_data, timeout=10)
+                if response.status_code == 200 and 'session_id' in response.cookies:
+                    print("✅ Odoo connection test successful")
+                else:
+                    print("⚠️  Could not verify Odoo connection - credentials will be saved anyway")
+            except Exception as e:
+                print(f"⚠️  Could not test Odoo connection: {e}")
+        
+        return {
+            'username': odoo_username,
+            'password': odoo_password,
+            'url': odoo_config['url'],
+            'database': db_config['name']
+        }
+    
     def verify_postgresql_access(self) -> Dict:
         """Verify PostgreSQL access and configuration"""
         print("\n🐘 Verifying PostgreSQL access...")
@@ -339,7 +395,7 @@ class ProjectSetupWizard:
             print(f"❌ PostgreSQL connection failed: {e}")
             return {}
     
-    def save_project_config(self, board: Dict, group: Optional[Dict], repo: Dict, odoo_config: Dict, db_config: Dict, pg_config: Dict) -> Dict:
+    def save_project_config(self, board: Dict, group: Optional[Dict], repo: Dict, odoo_config: Dict, db_config: Dict, odoo_user_config: Dict, pg_config: Dict) -> Dict:
         """Save complete project configuration"""
         config = {
             'project_name': repo['name'],
@@ -360,8 +416,15 @@ class ProjectSetupWizard:
                 'instance_name': odoo_config['name'],
                 'url': odoo_config['url'],
                 'database': db_config['name'],
-                'username': db_config['user'],
-                'password': db_config['password']
+                'username': odoo_user_config['username'],
+                'password': odoo_user_config['password']
+            },
+            'database': {
+                'name': db_config['name'],
+                'user': db_config['user'],
+                'password': db_config['password'],
+                'host': db_config['host'],
+                'port': db_config['port']
             },
             'postgresql': pg_config
         }

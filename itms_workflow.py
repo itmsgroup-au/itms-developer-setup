@@ -52,7 +52,23 @@ class ITMSWorkflow:
         """Load configuration from config.yaml"""
         config_file = self.setup_dir / "config.yaml"
         with open(config_file, 'r') as f:
-            content = os.path.expandvars(f.read())
+            content = f.read()
+        
+        # Handle bash-style environment variable expansion with defaults
+        import re
+        def replace_env_vars(match):
+            var_expr = match.group(1)
+            if ':-' in var_expr:
+                var_name, default_value = var_expr.split(':-', 1)
+                # Remove quotes from default value if present
+                default_value = default_value.strip('\'"')
+                return os.getenv(var_name, default_value)
+            else:
+                return os.getenv(var_expr, match.group(0))
+        
+        # Replace ${VAR:-default} and ${VAR} patterns
+        content = re.sub(r'\$\{([^}]+)\}', replace_env_vars, content)
+        
         return yaml.safe_load(content)
     
     def load_active_task(self) -> Optional[Dict]:
@@ -78,60 +94,61 @@ class ITMSWorkflow:
     
     def show_menu(self):
         """Show the main workflow menu"""
-        print("\n🚀 ITMS Daily Workflow Assistant")
+        print("\nITMS Daily Workflow Assistant")
         print("=" * 40)
         
         # Show active task status
         if self.active_task:
-            print(f"\n🎯 ACTIVE TASK: {self.active_task['name']}")
+            print(f"\nACTIVE TASK: {self.active_task['name']}")
             print(f"   ID: {self.active_task['id']} | Status: {self.active_task.get('status', 'Unknown')}")
         else:
-            print("\n🎯 No active task selected")
+            print("\nNo active task selected")
         
         print()
-        print("📋 TASK MANAGEMENT:")
-        print("1. 🔍 View Monday.com tasks")
-        print("2. 🎯 Select active task")
+        print("TASK MANAGEMENT:")
+        print("1. View Monday.com tasks")
+        print("2. Select active task")
         print("3. 💬 Add task update/comment")
-        print("4. ✅ Mark active task complete")
+        print("4. Mark active task complete")
         print()
-        print("📋 PROJECT CONTEXT:")
-        print("5. 🎯 Set Project Context (Board + Repo)")
-        print("6. 🚀 Complete Project Setup Wizard")
-        print("7. 📋 List available boards")
-        print("8. 🔄 Switch board")
+        print("PROJECT CONTEXT:")
+        print("5. Set Project Context (Board + Repo)")
+        print("6. Complete Project Setup Wizard")
+        print("7. List available boards")
+        print("8. Switch board")
         print("9. 🐙 Switch GitHub repo")
-        print("10. 🔧 Switch Odoo instance")
+        print("10. Switch Odoo instance")
         print()
         print("💻 DEVELOPMENT:")
-        print("11. ✅ Create new Odoo task")
-        print("12. 🔧 Create Odoo module")
-        print("13. 🏗️  Set up Cursor workspace")
-        print("14. 🧪 Run module tests")
+        print("11. Create new Odoo task")
+        print("12. Create Odoo module")
+        print("13. Set up Cursor workspace")
+        print("14. Run module tests")
         print()
-        print("🔧 ODOO MANAGEMENT:")
-        print("15. 🔧 Manage Odoo instances (start/stop/status)")
+        print("ODOO MANAGEMENT:")
+        print("15. Manage Odoo instances (start/stop/status)")
         print()
-        print("🔧 CODE QUALITY:")
-        print("16. 📦 Format & lint code")
-        print("17. 🔍 Quality check")
+        print("CODE QUALITY:")
+        print("16. Format & lint code")
+        print("17. Quality check")
         print()
-        print("🚀 DEPLOYMENT:")
-        print("18. 📤 Commit & push changes")
-        print("19. 🔗 Link to Monday task")
-        print("20. 📝 Update changelog")
+        print("DEPLOYMENT:")
+        print("18. Commit & push changes")
+        print("19. Link to Monday task")
+        print("20. Update changelog")
         print()
-        print("🛠️  UTILITIES:")
-        print("21. 🏁 Complete workflow")
+        print("UTILITIES:")
+        print("21. Complete workflow")
         print("22. 🧹 Clear active task")
-        print("23. ⚙️  Setup/Config (Safe Mode)")
-        print("24. 📜 Start Odoo Log Viewer")
+        print("23. Setup/Config (Safe Mode)")
+        print("24. Start Odoo Log Viewer")
+        print("25. Update MCP Configurations")
         print("0. ❌ Exit")
         print()
     
     def list_monday_boards(self) -> List[Dict]:
         """List available Monday.com boards"""
-        print("📋 Fetching available Monday.com boards...")
+        print("Fetching available Monday.com boards...")
         
         query = """
         query {
@@ -161,7 +178,7 @@ class ITMSWorkflow:
                     return []
                 
                 boards = data['data']['boards']
-                print(f"✅ Found {len(boards)} boards")
+                print(f"Found {len(boards)} boards")
                 return boards
             else:
                 print(f"❌ API Error: {response.status_code}")
@@ -176,17 +193,17 @@ class ITMSWorkflow:
         boards = self.list_monday_boards()
         
         if not boards:
-            print("📷 No boards found")
+            print("No boards found")
             return
         
-        print("\n📋 Available Monday.com Boards:")
+        print("\nAvailable Monday.com Boards:")
         print("-" * 60)
         
         current_board_id = str(self.monday_api.get('board_id', ''))
         
         for i, board in enumerate(boards, 1):
             board_id = str(board['id'])
-            current_marker = " ⭐ (CURRENT)" if board_id == current_board_id else ""
+            current_marker = " (CURRENT)" if board_id == current_board_id else ""
             
             print(f"{i:2d}. {board['name']}{current_marker}")
             print(f"    ID: {board_id}")
@@ -200,7 +217,7 @@ class ITMSWorkflow:
     
     def switch_board(self):
         """Switch to a different Monday.com board"""
-        print("\n🔄 Switch Monday.com Board")
+        print("\nSwitch Monday.com Board")
         boards = self.show_boards()
         
         if not boards:
@@ -246,8 +263,8 @@ class ITMSWorkflow:
                 # Update current instance
                 self.monday_api['board_id'] = board_id
                 
-                print(f"✅ Switched to board: {board_name} (ID: {board_id})")
-                print("🔄 Restart the workflow to fully apply changes")
+                print(f"Switched to board: {board_name} (ID: {board_id})")
+                print("Restart the workflow to fully apply changes")
             else:
                 print("❌ .env file not found")
                 
@@ -258,25 +275,29 @@ class ITMSWorkflow:
     
     def get_monday_tasks(self) -> List[Dict]:
         """Fetch current Monday.com tasks"""
-        print("📋 Fetching Monday.com tasks...")
+        print("Fetching Monday.com tasks...")
         
-        query = """
-        query {
-            boards(ids: [18058278926]) {
-                items_page(limit: 25) {
-                    items {
+        query = f"""
+        query {{
+            boards(ids: [{self.monday_api['board_id']}]) {{
+                items_page(limit: 50) {{
+                    items {{
                         id
                         name
                         state
                         created_at
-                        column_values {
+                        group {{
+                            id
+                            title
+                        }}
+                        column_values {{
                             id
                             text
-                        }
-                    }
-                }
-            }
-        }
+                        }}
+                    }}
+                }}
+            }}
+        }}
         """
         
         try:
@@ -288,16 +309,40 @@ class ITMSWorkflow:
             
             if response.status_code == 200:
                 data = response.json()
-                tasks = data['data']['boards'][0]['items_page']['items']
+                if 'errors' in data:
+                    print(f"GraphQL errors: {data['errors']}")
+                    return []
+                all_tasks = data['data']['boards'][0]['items_page']['items']
                 
-                print(f"✅ Found {len(tasks)} tasks")
-                return tasks[:10]  # Show top 10
+                # Get active group from environment
+                active_group_id = os.getenv('MONDAY_GROUP_ID')
+                active_group_name = os.getenv('MONDAY_GROUP_NAME', 'Unknown')
+                
+                # Sort tasks: active group first, then others
+                if active_group_id:
+                    active_group_tasks = [t for t in all_tasks if t['group']['id'] == active_group_id]
+                    other_tasks = [t for t in all_tasks if t['group']['id'] != active_group_id]
+                    
+                    # Combine: active group tasks first, then others
+                    sorted_tasks = active_group_tasks + other_tasks
+                    
+                    print(f"Found {len(all_tasks)} tasks ({len(active_group_tasks)} in active group '{active_group_name}', {len(other_tasks)} in other groups)")
+                else:
+                    sorted_tasks = all_tasks
+                    print(f"Found {len(all_tasks)} tasks (no active group filter)")
+                
+                return sorted_tasks[:25]  # Show top 25
             else:
-                print(f"❌ API Error: {response.status_code}")
+                print(f"API Error: {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"Error details: {error_data}")
+                except:
+                    print(f"Response text: {response.text}")
                 return []
                 
         except Exception as e:
-            print(f"❌ Error fetching tasks: {e}")
+            print(f"Error fetching tasks: {e}")
             return []
     
     def show_tasks(self):
@@ -305,18 +350,31 @@ class ITMSWorkflow:
         tasks = self.get_monday_tasks()
         
         if not tasks:
-            print("📭 No tasks found")
+            print("No tasks found")
             return tasks
         
-        print("\n📋 Current Monday.com Tasks:")
-        print("-" * 60)
+        print("\nCurrent Monday.com Tasks:")
+        print("-" * 70)
         
+        # Get active group for marking
+        active_group_id = os.getenv('MONDAY_GROUP_ID')
+        active_group_name = os.getenv('MONDAY_GROUP_NAME', '')
+        
+        current_group = None
         for i, task in enumerate(tasks, 1):
+            task_group = task.get('group', {})
+            task_group_name = task_group.get('title', 'No Group')
             status = task.get('state', 'Unknown')
-            active_marker = " 🎯 (ACTIVE)" if self.active_task and task['id'] == self.active_task['id'] else ""
+            active_marker = " (ACTIVE)" if self.active_task and task['id'] == self.active_task['id'] else ""
+            
+            # Show group header when group changes
+            if task_group_name != current_group:
+                current_group = task_group_name
+                group_indicator = " [ACTIVE GROUP]" if task_group.get('id') == active_group_id else ""
+                print(f"\n--- {task_group_name}{group_indicator} ---")
             
             print(f"{i:2d}. {task['name']}{active_marker}")
-            print(f"    ID: {task['id']} | Status: {status}")
+            print(f"    ID: {task['id']} | Status: {status} | Group: {task_group_name}")
             
             # Show priority if available
             for col in task.get('column_values', []):
@@ -329,7 +387,7 @@ class ITMSWorkflow:
     
     def create_odoo_task(self):
         """Create a new Odoo development task"""
-        print("\n🔧 Creating new Odoo task...")
+        print("\nCreating new Odoo task...")
         
         module_name = input("Module name (e.g., itms_inventory): ").strip()
         if not module_name:
@@ -365,7 +423,7 @@ class ITMSWorkflow:
             if response.status_code == 200:
                 result = response.json()
                 task_id = result['data']['create_item']['id']
-                print(f"✅ Created Monday task: {task_name}")
+                print(f"Created Monday task: {task_name}")
                 print(f"   Task ID: {task_id}")
                 
                 # Also create local module structure
@@ -379,14 +437,14 @@ class ITMSWorkflow:
     
     def create_module_structure(self, module_name: str):
         """Create basic Odoo module structure"""
-        print(f"📁 Creating module structure for {module_name}...")
+        print(f"Creating module structure for {module_name}...")
         
         # Determine module path
         marco_odoo = Path(os.path.expandvars(self.config['paths']['marco_odoo']))
         module_path = marco_odoo / module_name
         
         if module_path.exists():
-            print(f"⚠️  Module {module_name} already exists")
+            print(f"Module {module_name} already exists")
             return
         
         # Create directory structure
@@ -436,7 +494,7 @@ class ITMSWorkflow:
         (module_path / '__init__.py').write_text('from . import models\n')
         (module_path / 'models' / '__init__.py').write_text('')
         
-        print(f"✅ Created module structure: {module_path}")
+        print(f"Created module structure: {module_path}")
     
     def setup_cursor_workspace(self):
         """Set up Cursor workspace for current project"""
@@ -467,7 +525,7 @@ class ITMSWorkflow:
         with open(settings_file, 'w') as f:
             json.dump(cursor_settings, f, indent=2)
         
-        print(f"✅ Cursor workspace configured: {settings_file}")
+        print(f"Cursor workspace configured: {settings_file}")
         
         # Load ITMS guidelines into context
         self.load_ai_context()
@@ -485,13 +543,13 @@ class ITMSWorkflow:
         for context_file in context_files:
             file_path = self.setup_dir / context_file
             if file_path.exists():
-                print(f"   📄 Loaded: {context_file}")
+                print(f"   Loaded: {context_file}")
         
-        print("✅ AI context loaded - Ready for development")
+        print("AI context loaded - Ready for development")
     
     def format_and_lint(self):
         """Format code with Black and lint with Ruff"""
-        print("\n📦 Formatting and linting code...")
+        print("\nFormatting and linting code...")
         
         # Get current directory or ask user
         target_dir = input("Directory to format [current]: ").strip() or "."
@@ -501,50 +559,50 @@ class ITMSWorkflow:
             print(f"❌ Directory not found: {target_path}")
             return
         
-        print(f"🎯 Target: {target_path}")
+        print(f"Target: {target_path}")
         
         # Run Black
-        print("🎨 Running Black formatter...")
+        print("Running Black formatter...")
         try:
             result = subprocess.run(
                 ['black', '--line-length', '88', str(target_path)],
                 capture_output=True, text=True
             )
             if result.returncode == 0:
-                print("   ✅ Black formatting completed")
+                print("   Black formatting completed")
             else:
-                print(f"   ⚠️  Black issues: {result.stderr}")
+                print(f"   Black issues: {result.stderr}")
         except FileNotFoundError:
             print("   ❌ Black not installed")
         
         # Run Ruff
-        print("🔍 Running Ruff linter...")
+        print("Running Ruff linter...")
         try:
             result = subprocess.run(
                 ['ruff', 'check', '--fix', str(target_path)],
                 capture_output=True, text=True
             )
             if result.returncode == 0:
-                print("   ✅ Ruff linting completed")
+                print("   Ruff linting completed")
             else:
-                print(f"   ⚠️  Ruff found issues:")
+                print(f"   Ruff found issues:")
                 print(f"   {result.stdout}")
         except FileNotFoundError:
             print("   ❌ Ruff not installed")
     
     def commit_and_push(self):
         """Commit changes and push to GitHub"""
-        print("\n📤 Committing and pushing changes...")
+        print("\nCommitting and pushing changes...")
         
         # Check git status
         result = subprocess.run(['git', 'status', '--porcelain'], 
                               capture_output=True, text=True)
         
         if not result.stdout.strip():
-            print("📭 No changes to commit")
+            print("No changes to commit")
             return
         
-        print("📋 Changes found:")
+        print("Changes found:")
         print(result.stdout)
         
         # Get commit message
@@ -559,26 +617,26 @@ class ITMSWorkflow:
             
             # Commit with conventional format
             subprocess.run(['git', 'commit', '-m', commit_msg], check=True)
-            print("✅ Changes committed")
+            print("Changes committed")
             
             # Push to origin
             push_choice = input("Push to GitHub? (y/n) [y]: ").strip().lower()
             if push_choice != 'n':
                 subprocess.run(['git', 'push'], check=True)
-                print("✅ Changes pushed to GitHub")
+                print("Changes pushed to GitHub")
                 
                 # Get commit hash for Monday.com linking
                 result = subprocess.run(['git', 'rev-parse', 'HEAD'],
                                       capture_output=True, text=True)
                 commit_hash = result.stdout.strip()[:7]
-                print(f"📝 Commit hash: {commit_hash}")
+                print(f"Commit hash: {commit_hash}")
                 
         except subprocess.CalledProcessError as e:
             print(f"❌ Git error: {e}")
     
     def select_active_task(self):
         """Select a task from Monday.com as the active task"""
-        print("\n🎯 Select Active Task")
+        print("\nSelect Active Task")
         tasks = self.show_tasks()
         
         if not tasks:
@@ -589,7 +647,7 @@ class ITMSWorkflow:
             
             if choice == '0':
                 self.save_active_task(None)
-                print("✅ Active task cleared")
+                print("Active task cleared")
                 return
             
             if choice.isdigit() and 1 <= int(choice) <= len(tasks):
@@ -605,7 +663,7 @@ class ITMSWorkflow:
                 }
                 
                 self.save_active_task(active_task)
-                print(f"✅ Active task set: {selected_task['name']}")
+                print(f"Active task set: {selected_task['name']}")
                 
                 # Automatically add a "started working" update
                 self.add_task_update(f"Started working on this task at {datetime.now().strftime('%Y-%m-%d %H:%M')}")
@@ -643,7 +701,7 @@ class ITMSWorkflow:
             # Add update to Monday.com
             self.post_monday_update(self.active_task['id'], update_text)
             
-            print(f"✅ Update added to {self.active_task['name']}")
+            print(f"Update added to {self.active_task['name']}")
             
         except Exception as e:
             print(f"❌ Error adding update: {e}")
@@ -672,14 +730,14 @@ class ITMSWorkflow:
             if response.status_code == 200:
                 result = response.json()
                 if 'errors' in result:
-                    print(f"⚠️  Monday.com update warning: {result['errors']}")
+                    print(f"Monday.com update warning: {result['errors']}")
                 else:
-                    print("   ✅ Update posted to Monday.com")
+                    print("   Update posted to Monday.com")
             else:
-                print(f"⚠️  Failed to post to Monday.com: {response.status_code}")
+                print(f"Failed to post to Monday.com: {response.status_code}")
                 
         except Exception as e:
-            print(f"⚠️  Monday.com update failed: {e}")
+            print(f"Monday.com update failed: {e}")
     
     def complete_active_task(self):
         """Mark the active task as complete"""
@@ -687,7 +745,7 @@ class ITMSWorkflow:
             print("❌ No active task selected")
             return
         
-        print(f"\n✅ Completing task: {self.active_task['name']}")
+        print(f"\nCompleting task: {self.active_task['name']}")
         
         # Add completion update
         completion_text = f"Task completed at {datetime.now().strftime('%Y-%m-%d %H:%M')}"
@@ -697,13 +755,13 @@ class ITMSWorkflow:
         try:
             self.update_monday_status(self.active_task['id'], "Done")
         except Exception as e:
-            print(f"⚠️  Could not update Monday.com status: {e}")
+            print(f"Could not update Monday.com status: {e}")
         
         # Clear active task
         task_name = self.active_task['name']
         self.save_active_task(None)
         
-        print(f"✅ Task completed and cleared: {task_name}")
+        print(f"Task completed and cleared: {task_name}")
     
     def clear_active_task(self):
         """Clear the current active task without marking it complete"""
@@ -723,7 +781,7 @@ class ITMSWorkflow:
         self.save_active_task(None)
         self.active_task = None
         
-        print(f"✅ Active task '{task_name}' has been cleared")
+        print(f"Active task '{task_name}' has been cleared")
     
     def start_log_viewer(self):
         """Start the Odoo log viewer web interface"""
@@ -731,7 +789,7 @@ class ITMSWorkflow:
         import webbrowser
         import time
         
-        print("\n📜 Starting Odoo Log Viewer...")
+        print("\nStarting Odoo Log Viewer...")
         print("This will start a web server to stream Odoo logs in real-time")
         
         log_viewer_script = Path(__file__).parent / "odoo_log_viewer.py"
@@ -741,7 +799,7 @@ class ITMSWorkflow:
         
         try:
             # Start the log viewer in background
-            print("🚀 Starting log viewer server...")
+            print("Starting log viewer server...")
             process = subprocess.Popen([
                 "python3", str(log_viewer_script)
             ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -751,15 +809,15 @@ class ITMSWorkflow:
             
             # Check if it's running
             if process.poll() is None:
-                print("✅ Log viewer server started successfully")
+                print("Log viewer server started successfully")
                 print("🌐 Opening browser...")
                 webbrowser.open("http://127.0.0.1:5001")
-                print("\n📋 Log Viewer Instructions:")
+                print("\nLog Viewer Instructions:")
                 print("• Select an Odoo instance from the dropdown")
                 print("• Click 'Start' to begin streaming logs")
                 print("• Auto-scroll keeps you at the latest logs")
                 print("• Press Ctrl+C in terminal to stop the server")
-                print("\n⚠️  Note: Keep this terminal open while using the log viewer")
+                print("\nNote: Keep this terminal open while using the log viewer")
             else:
                 stdout, stderr = process.communicate()
                 print(f"❌ Failed to start log viewer:")
@@ -768,6 +826,51 @@ class ITMSWorkflow:
                 
         except Exception as e:
             print(f"❌ Error starting log viewer: {e}")
+    
+    def update_mcp_configurations(self):
+        """Update all MCP server configurations (Cursor, Kilo Code, Augment)"""
+        try:
+            print("\n🔗 Updating MCP Server Configurations...")
+            
+            # Load existing project context
+            context_file = self.setup_dir / '.project_context.json'
+            if not context_file.exists():
+                print("❌ No project context found. Run the Project Setup Wizard first (option 6).")
+                return
+            
+            with open(context_file, 'r') as f:
+                context = json.load(f)
+            
+            print(f"Board: {context.get('board_name', 'Unknown')} ({context.get('board_id', 'Unknown')})")
+            print(f"Group: {context.get('group_name', 'Unknown')} ({context.get('group_id', 'Unknown')})")
+            print(f"Repo: {context.get('repo_full_name', 'Unknown')}")
+            
+            # Create manager and set context
+            manager = self.context_manager
+            if not manager:
+                print("❌ Project context manager not available")
+                return
+                
+            manager.current_context = context
+            
+            # Update all MCP configurations
+            manager.update_all_mcp_configs()
+            
+            print("\n✅ All MCP configurations updated successfully!")
+            print("📌 Restart Cursor, Augment, and Kilo Code to apply changes")
+            print("\nUpdated configurations:")
+            print("- ✅ Cursor: ~/.cursor/mcp.json")
+            print("- ✅ Kilo Code: ...kilocode.kilo-code/settings/mcp_settings.json")
+            print("- ✅ Augment: ...augment.vscode-augment/augment-global-state/mcpServers.json")
+            print("\nAll servers now have:")
+            print("- Correct Odoo URL (without /odoo suffix)")
+            print("- Updated credentials from .env file")
+            print("- No duplicate odoo-browse servers")
+            
+        except Exception as e:
+            print(f"❌ Error updating MCP configurations: {e}")
+            import traceback
+            traceback.print_exc()
     
     def update_monday_status(self, item_id: str, status: str):
         """Update task status in Monday.com"""
@@ -791,20 +894,20 @@ class ITMSWorkflow:
         )
         
         if response.status_code == 200:
-            print("   ✅ Monday.com status updated")
+            print("   Monday.com status updated")
         else:
             raise Exception(f"Status update failed: {response.status_code}")
     
     def safe_setup_config(self):
         """Safe setup that doesn't overwrite MCP settings"""
-        print("\n⚙️  Safe Setup/Configuration")
+        print("\nSafe Setup/Configuration")
         print("This will NOT modify your MCP settings.")
         print()
         print("Available setup options:")
-        print("1. 📁 Create Odoo module structure")
+        print("1. Create Odoo module structure")
         print("2. 💻 Set up Cursor workspace")
-        print("3. 🔄 Reload configuration")
-        print("4. 📋 Check Monday.com connection")
+        print("3. Reload configuration")
+        print("4. Check Monday.com connection")
         print("0. ❌ Cancel")
         
         try:
@@ -818,11 +921,11 @@ class ITMSWorkflow:
                 self.setup_cursor_workspace()
             elif choice == '3':
                 self.config = self.load_config()
-                print("✅ Configuration reloaded")
+                print("Configuration reloaded")
             elif choice == '4':
                 tasks = self.get_monday_tasks()
                 if tasks:
-                    print(f"✅ Monday.com connected - {len(tasks)} tasks found")
+                    print(f"Monday.com connected - {len(tasks)} tasks found")
                 else:
                     print("❌ Monday.com connection issue")
             elif choice == '0':
@@ -839,7 +942,7 @@ class ITMSWorkflow:
             print("❌ Project context manager not available")
             return
         
-        print("\n🎯 Set Project Context (Board + Repo)")
+        print("\nSet Project Context (Board + Repo)")
         print("This will update all MCP configurations automatically.")
         
         try:
@@ -856,8 +959,8 @@ class ITMSWorkflow:
             # Reload active task (should be None now)
             self.active_task = self.load_active_task()
             
-            print("✅ Project context set and configurations updated!")
-            print("✅ Old active task cleared - ready for new project!")
+            print("Project context set and configurations updated!")
+            print("Old active task cleared - ready for new project!")
         except Exception as e:
             print(f"❌ Error setting project context: {e}")
     
@@ -877,15 +980,15 @@ class ITMSWorkflow:
                 self.context_manager.current_context['repo_name'] = repo['name']
                 self.context_manager.current_context['updated_at'] = datetime.now().isoformat()
                 self.context_manager.save_context(self.context_manager.current_context)
-                print("✅ GitHub repo updated and MCP configs synced!")
+                print("GitHub repo updated and MCP configs synced!")
         except Exception as e:
             print(f"❌ Error switching repo: {e}")
     
     def switch_odoo_instance(self):
         """Switch to a different Odoo instance (18/19, Enterprise/Community)"""
-        print("\n🔧 Switch Odoo Instance")
+        print("\nSwitch Odoo Instance")
         print("Available instances:")
-        print("1. 🏢 Odoo 18 Enterprise (http://localhost:8018)")
+        print("1. Odoo 18 Enterprise (http://localhost:8018)")
         print("2. 🏛️  Odoo 18 Community (http://localhost:8019)")
         print("3. 🏢 Odoo 19 Enterprise (http://localhost:8021)")
         print("4. 🏛️  Odoo 19 Community (http://localhost:8022)")
@@ -965,7 +1068,7 @@ class ITMSWorkflow:
     
     def manage_odoo_instances(self):
         """Manage Odoo instances using manage-odoo.sh"""
-        print("\n🔧 Odoo Instance Management")
+        print("\nOdoo Instance Management")
         print("Using your manage-odoo.sh script")
         print()
         print("1. 🏢 Start Odoo 18 Enterprise")
@@ -1103,6 +1206,8 @@ class ITMSWorkflow:
                     self.safe_setup_config()
                 elif choice == '24':
                     self.start_log_viewer()
+                elif choice == '25':
+                    self.update_mcp_configurations()
                 else:
                     print("🔧 Invalid option or feature coming soon...")
                 
