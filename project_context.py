@@ -446,6 +446,30 @@ class ProjectContextManager:
             "tools": [],
             "disabledTools": []
         })
+        
+        # ITMS Task Master (Enhanced workflow with task-master integration)
+        config.append({
+            "name": "itms-task-master",
+            "command": f"python3 {Path(__file__).parent / 'itms_mcp_enhanced.py'}",
+            "arguments": "",
+            "useShellInterpolation": True,
+            "env": {
+                "MONDAY_API_TOKEN": os.getenv('MONDAY_API_TOKEN', ''),
+                "MONDAY_BOARD_ID": board_id,
+                "GITHUB_TOKEN": os.getenv('GITHUB_TOKEN', ''),
+                "GITHUB_REPO": repo_full_name,
+                "GITHUB_ORG": repo_owner,
+                "DEVELOPER_NAME": os.getenv('DEVELOPER_NAME', ''),
+                "DEVELOPER_EMAIL": os.getenv('DEVELOPER_EMAIL', ''),
+                "PROJECT_ROOT": os.getenv('PROJECT_ROOT', ''),
+                "ODOO_PATH": os.getenv('ODOO_PATH', ''),
+                "CONTEXT7_API_KEY": os.getenv('CONTEXT7_API_KEY', '')
+            },
+            "id": "itms-task-master",
+            "tools": [],
+            "disabledTools": [],
+            "alwaysAllow": ["get_assigned_tasks", "select_active_task", "create_subtasks"]
+        })
     
     def update_standard_mcp_config(self, config: dict, board_id: str, repo_full_name: str, repo_owner: str):
         """Update standard MCP config with all servers"""
@@ -496,6 +520,25 @@ class ProjectContextManager:
                 "ODOO_PASSWORD": os.getenv('ODOO_PASSWORD', 'mark'),
                 "ODOO_ADMIN_PASSWD": os.getenv('ODOO_ADMIN_PASSWD', 'itmsadmin'),
                 "ODOO_PATH": os.getenv('ODOO_PATH', '/Users/markshaw/Desktop/git/odoo')
+            }
+        }
+        
+        # ITMS Task Master (Enhanced workflow with task-master integration)
+        servers['itms-task-master'] = {
+            "command": "python3",
+            "args": [str(Path(__file__).parent / 'itms_mcp_enhanced.py')],
+            "cwd": str(Path(__file__).parent),
+            "env": {
+                "MONDAY_API_TOKEN": os.getenv('MONDAY_API_TOKEN', ''),
+                "MONDAY_BOARD_ID": board_id,
+                "GITHUB_TOKEN": os.getenv('GITHUB_TOKEN', ''),
+                "GITHUB_REPO": repo_full_name,
+                "GITHUB_ORG": repo_owner,
+                "DEVELOPER_NAME": os.getenv('DEVELOPER_NAME', ''),
+                "DEVELOPER_EMAIL": os.getenv('DEVELOPER_EMAIL', ''),
+                "PROJECT_ROOT": os.getenv('PROJECT_ROOT', ''),
+                "ODOO_PATH": os.getenv('ODOO_PATH', ''),
+                "CONTEXT7_API_KEY": os.getenv('CONTEXT7_API_KEY', '')
             }
         }
         

@@ -93,6 +93,12 @@ class ProjectSetupWizard:
             print("❌ Setup cancelled - no board selected")
             return
         
+        # Step 1b: Monday.com Group Selection
+        print("\n" + "="*50)
+        print("👥 STEP 1b: Monday.com Group Selection (Optional)")
+        print("="*50)
+        group = self.select_monday_group(board['id'])
+        
         # Step 2: GitHub Repo
         print("\n" + "="*50) 
         print("🐙 STEP 2: GitHub Repository Selection")
@@ -130,7 +136,7 @@ class ProjectSetupWizard:
         print("\n" + "="*50)
         print("💾 STEP 6: Saving Project Configuration")
         print("="*50)
-        project_config = self.save_project_config(board, repo, odoo_config, db_config, pg_config)
+        project_config = self.save_project_config(board, group, repo, odoo_config, db_config, pg_config)
         
         # Step 7: Update MCP Servers
         print("\n" + "="*50)
@@ -176,6 +182,33 @@ class ProjectSetupWizard:
             pass
         
         print("❌ Invalid selection")
+        return None
+    
+    def select_monday_group(self, board_id: str) -> Optional[Dict]:
+        """Select Monday.com group within the board"""
+        groups = self.get_monday_groups(board_id)
+        if not groups:
+            print("No groups found on this board - proceeding with all tasks")
+            return None
+        
+        print("\nAvailable groups on this board:")
+        print("0. All groups (no filter)")
+        for i, group in enumerate(groups, 1):
+            print(f"{i:2d}. {group['title']} (ID: {group['id']}, Color: {group.get('color', 'default')})")
+        
+        try:
+            choice = input(f"\nSelect group (0-{len(groups)}) [0]: ").strip()
+            if not choice or choice == "0":
+                print("✅ Selected: All groups (no filter)")
+                return None
+            elif choice.isdigit() and 1 <= int(choice) <= len(groups):
+                selected = groups[int(choice) - 1]
+                print(f"✅ Selected group: {selected['title']}")
+                return selected
+        except:
+            pass
+        
+        print("❌ Invalid selection - proceeding with all groups")
         return None
     
     def select_github_repo(self) -> Optional[Dict]:
@@ -306,14 +339,16 @@ class ProjectSetupWizard:
             print(f"❌ PostgreSQL connection failed: {e}")
             return {}
     
-    def save_project_config(self, board: Dict, repo: Dict, odoo_config: Dict, db_config: Dict, pg_config: Dict) -> Dict:
+    def save_project_config(self, board: Dict, group: Optional[Dict], repo: Dict, odoo_config: Dict, db_config: Dict, pg_config: Dict) -> Dict:
         """Save complete project configuration"""
         config = {
             'project_name': repo['name'],
             'created_at': datetime.now().isoformat(),
             'monday': {
                 'board_id': str(board['id']),
-                'board_name': board['name']
+                'board_name': board['name'],
+                'group_id': str(group['id']) if group else None,
+                'group_name': group['title'] if group else None
             },
             'github': {
                 'repo_full_name': repo['full_name'],
@@ -352,6 +387,8 @@ class ProjectSetupWizard:
             context = {
                 'board_id': config['monday']['board_id'],
                 'board_name': config['monday']['board_name'],
+                'group_id': config['monday']['group_id'],
+                'group_name': config['monday']['group_name'],
                 'repo_full_name': config['github']['repo_full_name'],
                 'repo_owner': config['github']['repo_owner'],
                 'repo_name': config['github']['repo_name'],
@@ -504,6 +541,11 @@ class ProjectSetupWizard:
         print("-" * 40)
         print(f"📋 Monday Board: {config['monday']['board_name']}")
         print(f"   ID: {config['monday']['board_id']}")
+        if config['monday'].get('group_name'):
+            print(f"👥 Working Group: {config['monday']['group_name']}")
+            print(f"   ID: {config['monday']['group_id']}")
+        else:
+            print(f"👥 Working Group: All groups (no filter)")
         print(f"🐙 GitHub Repo: {config['github']['repo_full_name']}")
         print(f"🔧 Odoo Instance: {config['odoo']['instance_name']}")
         print(f"   URL: {config['odoo']['url']}")
@@ -552,6 +594,39 @@ class ProjectSetupWizard:
             if response.status_code == 200:
                 data = response.json()
                 return data['data']['boards']
+        except:
+            pass
+        
+        return []
+    
+    def get_monday_groups(self, board_id: str) -> List[Dict]:
+        """Fetch Monday.com groups for a specific board"""
+        query = f"""
+        query {{
+            boards(ids: [{board_id}]) {{
+                groups {{
+                    id
+                    title
+                    color
+                    archived
+                }}
+            }}
+        }}
+        """
+        
+        try:
+            response = self.session.post(
+                'https://api.monday.com/v2',
+                json={'query': query},
+                headers={'Authorization': self.monday_token}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'errors' not in data and data['data']['boards']:
+                    groups = data['data']['boards'][0]['groups']
+                    # Return only non-archived groups
+                    return [g for g in groups if not g.get('archived', False)]
         except:
             pass
         
@@ -694,6 +769,8 @@ class ProjectSetupWizard:
         
         updates = {
             'MONDAY_BOARD_ID': config['monday']['board_id'],
+            'MONDAY_GROUP_ID': config['monday']['group_id'] or '',
+            'MONDAY_GROUP_NAME': config['monday']['group_name'] or '',
             'GITHUB_REPO': config['github']['repo_full_name'],
             'GITHUB_ORG': config['github']['repo_owner'],
             'ODOO_URL': config['odoo']['url'],

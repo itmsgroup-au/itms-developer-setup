@@ -1,0 +1,61 @@
+{
+  "id": "18059412227",
+  "name": "Bigquery research",
+  "state": "active",
+  "created_at": "2025-09-28T04:08:05Z",
+  "updated_at": "2025-09-29T04:56:51Z",
+  "column_values": [
+    {
+      "id": "subtasks_mkw8wrgm",
+      "text": null,
+      "value": null
+    },
+    {
+      "id": "status",
+      "text": "Research",
+      "value": "{\"index\":2,\"post_id\":null,\"changed_at\":\"2025-09-29T04:56:37.989Z\"}"
+    },
+    {
+      "id": "status_16",
+      "text": null,
+      "value": null
+    },
+    {
+      "id": "numbers",
+      "text": "",
+      "value": null
+    },
+    {
+      "id": "dup__of_reach__0_5_",
+      "text": "",
+      "value": null
+    },
+    {
+      "id": "numeric",
+      "text": "",
+      "value": null
+    },
+    {
+      "id": "numbers9",
+      "text": "",
+      "value": null
+    },
+    {
+      "id": "formula4",
+      "text": "",
+      "value": null
+    }
+  ],
+  "updates": [
+    {
+      "id": "4527637922",
+      "body": "<p><br></p> <p>create documentation on how to drive the creation Google Workspace and Office 365 platform into Google Big Query. We need to get users, groups, email addresses, licenses, usages etc from the platforms\u00a0</p>",
+      "created_at": "2025-09-29T04:50:12.000Z",
+      "creator": {
+        "name": "Mark Shaw"
+      }
+    }
+  ],
+  "selected_at": "2025-09-29T14:02:46.574669",
+  "auto_selected": true
+}
