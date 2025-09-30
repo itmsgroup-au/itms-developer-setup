@@ -1,0 +1,125 @@
+{
+  "folders": [
+    {
+      "name": "Current Task",
+      "path": "./marco_odoo/itms_contact"
+    },
+    {
+      "name": "Odoo Core",
+      "path": "${ODOO_ROOT/odoo18-server\"}"
+    },
+    {
+      "name": "Custom Modules",
+      "path": "${GIT_ROOT/marco_odoo\"}"
+    }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "${ODOO_ROOT/odoo18-server\"}/venv/bin/python",
+    "python.linting.enabled": true,
+    "python.linting.ruffEnabled": true,
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+      "--line-length=88"
+    ],
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "**/.git": true,
+      "**/node_modules": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/venv": true,
+      "**/__pycache__": true
+    },
+    "odoo.addonsPath": [
+      "${GIT_ROOT/marco_odoo\"}",
+      "${ODOO_ROOT/odoo18-server\"}/addons",
+      "${ODOO_ROOT/odoo18-server\"}/odoo/addons"
+    ],
+    "odoo.pythonPath": "${ODOO_ROOT/odoo18-server\"}/odoo-bin",
+    "files.associations": {
+      "*.xml": "xml",
+      "*.py": "python",
+      "*.js": "javascript",
+      "*.css": "css"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.black-formatter",
+      "charliermarsh.ruff",
+      "redhat.vscode-xml",
+      "ms-vscode.vscode-json",
+      "jigar-patel.odoo-snippets",
+      "trinhanhngoc.vscode-odoo"
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Start Odoo for itms_contact",
+        "type": "shell",
+        "command": "${ODOO_ROOT/odoo18-server\"}/odoo-bin",
+        "args": [
+          "-c",
+          "${GIT_ROOT/odoo\"}/odoo.conf",
+          "-d",
+          "odoo_test",
+          "-u",
+          "itms_contact",
+          "--dev=reload,qweb,werkzeug,xml"
+        ],
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "new",
+          "showReuseMessage": true,
+          "clear": false
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Test itms_contact",
+        "type": "shell",
+        "command": "${ODOO_ROOT/odoo18-server\"}/odoo-bin",
+        "args": [
+          "-c",
+          "${GIT_ROOT/odoo\"}/odoo.conf",
+          "-d",
+          "odoo_test_test",
+          "-i",
+          "itms_contact",
+          "--test-enable",
+          "--stop-after-init"
+        ],
+        "group": "test",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "new"
+        }
+      },
+      {
+        "label": "Code Review",
+        "type": "shell",
+        "command": "python3",
+        "args": [
+          "/Users/markshaw/Desktop/git/itms-developer-setup/code_review_integration.py",
+          "--save-report",
+          "--update-monday"
+        ],
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always"
+        }
+      }
+    ]
+  }
+}

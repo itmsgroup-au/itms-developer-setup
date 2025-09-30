@@ -1,4 +1,5 @@
 {
+  "project_nickname": "QLM-PRISM-SYNC",
   "board_id": "9958809681",
   "board_name": "Odoo Asia Project Board",
   "group_id": "group_mkw8twr4",
@@ -6,5 +7,7 @@
   "repo_full_name": "itmsgroup-au/qlm-v18",
   "repo_owner": "itmsgroup-au",
   "repo_name": "qlm-v18",
-  "updated_at": "2025-09-29T18:38:36.225721"
+  "database": "BIGQUERY",
+  "odoo_url": "http://localhost:8018/odoo",
+  "updated_at": "2025-09-30T11:28:54.368777"
 }

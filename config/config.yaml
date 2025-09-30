@@ -6,7 +6,7 @@ paths:
   odoo_root: ${ODOO_ROOT:-"${GIT_ROOT}/odoo"}
   odoo_18: ${ODOO_18_PATH:-"${ODOO_ROOT}/odoo18-server"}
   odoo_19: ${ODOO_19_PATH:-"${ODOO_ROOT}/odoo19-server"}
-  marco_odoo: ${MARCO_ODOO_PATH:-"${GIT_ROOT}/marco_odoo"}
+  custom_modules: ${CUSTOM_MODULES_PATH:-${GIT_ROOT}/custom_modules}
   itms_setup: ${ITMS_SETUP_PATH:-"${GIT_ROOT}/itms-developer-setup"}
   temp_dir: ${TEMP_DIR:-"/tmp/odoo_work"}
   backup_dir: ${BACKUP_DIR:-"${GIT_ROOT}/.backups"}

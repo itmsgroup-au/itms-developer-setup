@@ -1,0 +1,129 @@
+{
+  "task": {
+    "id": "9958829248",
+    "name": "Contact",
+    "state": "active",
+    "group": {
+      "id": "group_mkveafbr",
+      "title": "Models"
+    },
+    "board": {
+      "id": "9958809681",
+      "name": "Odoo Asia Project Board"
+    },
+    "column_values": [
+      {
+        "id": "subitems",
+        "text": null,
+        "value": null
+      },
+      {
+        "id": "dup__of_owner__1",
+        "text": "Sven Saric",
+        "value": "{\"changed_at\":\"2025-09-03T07:11:41.205Z\",\"personsAndTeams\":[{\"id\":11607487,\"kind\":\"person\"}]}"
+      },
+      {
+        "id": "people",
+        "text": "Mark Shaw",
+        "value": "{\"changed_at\":\"2025-09-03T07:11:45.096Z\",\"personsAndTeams\":[{\"id\":11607556,\"kind\":\"person\"}]}"
+      },
+      {
+        "id": "timeline",
+        "text": "",
+        "value": null
+      },
+      {
+        "id": "status",
+        "text": "Working on it",
+        "value": "{\"index\":0,\"post_id\":null,\"changed_at\":\"2025-09-05T08:58:07.476Z\"}"
+      },
+      {
+        "id": "numbers6",
+        "text": "",
+        "value": null
+      },
+      {
+        "id": "time_tracking0",
+        "text": "57:16:52",
+        "value": "{\"running\":\"false\",\"duration\":206212,\"startDate\":1757389753,\"changed_at\":\"2025-09-08T02:40:19.645Z\"}"
+      },
+      {
+        "id": "formula__1",
+        "text": "",
+        "value": null
+      },
+      {
+        "id": "formula5__1",
+        "text": "",
+        "value": null
+      },
+      {
+        "id": "text",
+        "text": "",
+        "value": null
+      },
+      {
+        "id": "files",
+        "text": "",
+        "value": null
+      },
+      {
+        "id": "item_id_mkkhpmh7",
+        "text": "9958829248",
+        "value": "{\"item_id\":\"9958829248\"}"
+      }
+    ],
+    "updates": [
+      {
+        "id": "4529302775",
+        "body": "\u2705 Code review completed - No issues found in 2 files",
+        "created_at": "2025-09-29T14:35:52.000Z"
+      },
+      {
+        "id": "4529289246",
+        "body": "\u2705 Code review completed - No issues found in 2 files",
+        "created_at": "2025-09-29T14:32:50.000Z"
+      },
+      {
+        "id": "4529282974",
+        "body": "Started working on this task at 2025-09-29 23:31",
+        "created_at": "2025-09-29T14:31:18.000Z"
+      },
+      {
+        "id": "4529250574",
+        "body": "\u2705 Code review completed - No issues found in 2 files",
+        "created_at": "2025-09-29T14:25:00.000Z"
+      },
+      {
+        "id": "4529242815",
+        "body": "working with Bruce on this nw",
+        "created_at": "2025-09-29T14:23:27.000Z"
+      },
+      {
+        "id": "4454582148",
+        "body": "<p>\ufeffPrism contact is odoo res.partner type = individual,</p><p>\ufeffthe table where the customer name is serves as the relationship to the parent odoo contact record which is the company res.partner</p><img src=\"https://itmsgroup-squad.monday.com/protected_static/5231588/resources/2393566339/big-image.png\" data-asset_id=\"2393566339\" >",
+        "created_at": "2025-09-03T07:11:35.000Z"
+      }
+    ]
+  },
+  "requirements": {
+    "modules_needed": [],
+    "test_data_needed": [],
+    "dependencies": [],
+    "odoo_apps": [],
+    "database_requirements": [],
+    "documentation_needed": [],
+    "task_type": "unknown",
+    "complexity": "medium",
+    "estimated_files": [
+      "itms_contact/__manifest__.py",
+      "itms_contact/models/__init__.py",
+      "itms_contact/views/itms_contact_views.xml",
+      "itms_contact/security/ir.model.access.csv"
+    ]
+  },
+  "module_path": "/Users/markshaw/Desktop/git/marco_odoo/itms_contact",
+  "project_workspace": "/Users/markshaw/Desktop/cursor-workspaces/test.code-workspace",
+  "suggestions": [],
+  "created_at": "2025-09-30T10:28:22.914724"
+}

@@ -1,0 +1,17 @@
+{
+  "test": {
+    "nickname": "test",
+    "description": "Test Project for Demo",
+    "monday_board_id": "9958809681",
+    "monday_board_name": "Odoo Asia Test Board",
+    "monday_group_id": "",
+    "monday_group_name": "",
+    "github_repo": "test-repo",
+    "github_owner": "itmsgroup-au",
+    "odoo_database": "odoo_test",
+    "odoo_url": "http://localhost:8018",
+    "workspace_path": "/Users/markshaw/Desktop/cursor-workspaces/test.code-workspace",
+    "created_at": "2025-09-30T10:09:01.607254",
+    "last_used": "2025-09-30T10:09:11.189152"
+  }
+}

@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+"""
+ITMS CLI - Quick access to smart development features
+"""
+
+import sys
+import subprocess
+from pathlib import Path
+
+def main():
+    """Main CLI entry point"""
+    setup_dir = Path(__file__).parent
+    
+    if len(sys.argv) < 2:
+        print("🤖 ITMS Smart Development CLI")
+        print("=" * 40)
+        print()
+        print("Usage: itms <command> [options]")
+        print()
+        print("Commands:")
+        print("  workflow              Start main workflow assistant")
+        print("  review [files...]     Run AI code review")
+        print("  setup [task-id]       Smart environment setup")
+        print("  analyze [task-id]     Analyze task requirements")
+        print("  workspace [task-id]   Create contextual workspace") 
+        print("  suggestions           Show smart task suggestions")
+        print("  project <nickname>    Switch to project by nickname")
+        print("  project list          List all project nicknames")
+        print("  project setup         Set up new project nickname")
+        print("  hooks install         Install Git hooks")
+        print("  hooks status          Check Git hooks status")
+        print("  hooks uninstall       Remove Git hooks")
+        print()
+        print("Examples:")
+        print("  itms workflow         # Start main menu")
+        print("  itms review           # Review changed files")
+        print("  itms setup            # Setup for active task")
+        print("  itms setup 123456     # Setup for specific task")
+        print("  itms hooks install    # Install smart Git hooks")
+        print("  itms project canbrax  # Switch to 'canbrax' project")
+        sys.exit(0)
+    
+    command = sys.argv[1]
+    args = sys.argv[2:]
+    
+    try:
+        if command == 'workflow':
+            subprocess.run([sys.executable, str(setup_dir / 'itms_workflow.py')] + args)
+            
+        elif command == 'review':
+            cmd = [sys.executable, str(setup_dir / 'src' / 'code_review_integration.py')]
+            if args:
+                cmd.extend(['--files'] + args)
+            else:
+                cmd.extend(['--save-report', '--update-monday', '--odoo-only'])
+            subprocess.run(cmd)
+            
+        elif command == 'setup':
+            cmd = [sys.executable, str(setup_dir / 'src' / 'contextual_dev_environment.py'), '--setup']
+            if args:
+                cmd.extend(['--task-id', args[0]])
+            subprocess.run(cmd)
+            
+        elif command == 'analyze':
+            cmd = [sys.executable, str(setup_dir / 'contextual_dev_environment.py'), '--analyze']
+            if args:
+                cmd.extend(['--task-id', args[0]])
+            subprocess.run(cmd)
+            
+        elif command == 'workspace':
+            cmd = [sys.executable, str(setup_dir / 'src' / 'contextual_dev_environment.py')]
+            if args:
+                cmd.extend(['--task-id', args[0]])
+            cmd.extend(['--setup', '--open-workspace'])
+            subprocess.run(cmd)
+            
+        elif command == 'suggestions':
+            cmd = [sys.executable, str(setup_dir / 'src' / 'contextual_dev_environment.py')]
+            # This would show suggestions in the workflow
+            subprocess.run([sys.executable, str(setup_dir / 'itms_workflow.py')])
+            
+        elif command == 'project':
+            if not args:
+                print("Usage: itms project <nickname|list|setup>")
+                sys.exit(1)
+            
+            project_action = args[0]
+            
+            if project_action == 'list':
+                subprocess.run([sys.executable, str(setup_dir / 'src' / 'project_nicknames.py'), 'list'])
+            elif project_action == 'setup':
+                subprocess.run([sys.executable, str(setup_dir / 'src' / 'project_nicknames.py'), 'setup'])
+            else:
+                # Assume it's a nickname to switch to
+                subprocess.run([sys.executable, str(setup_dir / 'src' / 'project_nicknames.py'), 'switch', project_action])
+            
+        elif command == 'hooks':
+            if not args:
+                print("Usage: itms hooks <install|status|uninstall>")
+                sys.exit(1)
+            
+            hook_action = args[0]
+            if hook_action in ['install', 'status', 'uninstall']:
+                subprocess.run([sys.executable, str(setup_dir / 'src' / 'setup_git_hooks.py'), hook_action])
+            else:
+                print(f"Unknown hooks action: {hook_action}")
+                sys.exit(1)
+                
+        else:
+            print(f"Unknown command: {command}")
+            print("Run 'itms' without arguments to see available commands")
+            sys.exit(1)
+            
+    except KeyboardInterrupt:
+        print("\nAborted by user")
+    except FileNotFoundError as e:
+        print(f"Error: Required file not found - {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

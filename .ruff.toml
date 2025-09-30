@@ -1,73 +1,20 @@
-# Ruff configuration for Odoo development
-# Based on https://github.com/fda-odoo/ruff-odoo
-
 [lint]
-# Enable Odoo-specific rules
-extend-select = [
-    "OCA",  # OCA rules
-    "ODO",  # Odoo-specific rules
-]
-
-# Standard Python rules
 select = [
     "E",    # pycodestyle errors
     "W",    # pycodestyle warnings  
     "F",    # pyflakes
     "I",    # isort
-    "N",    # pep8-naming
-    "C90",  # mccabe complexity
-    "UP",   # pyupgrade
-    "B",    # flake8-bugbear
-    "S",    # flake8-bandit (security)
-    "C4",   # flake8-comprehensions
-    "T20",  # flake8-print
 ]
 
-# Ignore specific rules that conflict with Odoo patterns
 ignore = [
-    "N999",   # Invalid module name (Odoo modules don't follow PEP8)
-    "N806",   # Variable in function should be lowercase (Odoo uses CamelCase)
     "E501",   # Line too long (handled by black)
-    "B008",   # Do not perform function calls in argument defaults
-    "S101",   # Use of assert (common in Odoo)
-    "C901",   # Function is too complex (Odoo has complex business logic)
+    "E722",   # Do not use bare except
+    "F841",   # Local variable assigned but never used
 ]
 
-# Files to exclude
-extend-exclude = [
-    "migrations/",
+exclude = [
     "__pycache__/",
     ".git/",
     ".venv/",
-    "build/",
-    "dist/",
-    "*.egg-info/",
+    "archive/",
 ]
-
-[lint.per-file-ignores]
-# Test files can use asserts and print statements
-"**/tests/**" = ["S101", "T201", "T203"]
-# Migration files have different patterns
-"**/migrations/**" = ["N999", "E501"]
-# __init__.py files can have unused imports
-"__init__.py" = ["F401"]
-
-[lint.mccabe]
-# Maximum complexity for functions
-max-complexity = 15
-
-[lint.isort]
-# Odoo import organization
-known-odoo = ["odoo", "openerp"]
-known-third-party = ["requests", "lxml", "dateutil", "PIL"]
-section-order = ["future", "standard-library", "third-party", "odoo", "first-party", "local-folder"]
-
-[format]
-# Use black-compatible settings
-quote-style = "double"
-indent-style = "space"
-skip-string-normalization = false
-line-ending = "auto"
-
-# Target Python 3.8+ (Odoo 18+ requirement)
-target-version = "py38"

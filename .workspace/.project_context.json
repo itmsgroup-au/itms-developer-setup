@@ -1,0 +1,13 @@
+{
+  "project_nickname": "test",
+  "board_id": "9958809681",
+  "board_name": "Odoo Asia Test Board",
+  "group_id": "",
+  "group_name": "",
+  "repo_full_name": "itmsgroup-au/test-repo",
+  "repo_owner": "itmsgroup-au",
+  "repo_name": "test-repo",
+  "database": "odoo_test",
+  "odoo_url": "http://localhost:8018",
+  "updated_at": "2025-09-30T10:09:11.187552"
+}

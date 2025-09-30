@@ -1,0 +1,17 @@
+{
+  "QLM-PRISM-SYNC": {
+    "nickname": "QLM-PRISM-SYNC",
+    "description": "qlm-v18 - Odoo Asia Project Board",
+    "monday_board_id": "9958809681",
+    "monday_board_name": "Odoo Asia Project Board",
+    "monday_group_id": "group_mkw8twr4",
+    "monday_group_name": "BigQuery",
+    "github_repo": "qlm-v18",
+    "github_owner": "itmsgroup-au",
+    "odoo_database": "BIGQUERY",
+    "odoo_url": "http://localhost:8018/odoo",
+    "workspace_path": "/Users/markshaw/Desktop/cursor-workspaces/QLM-PRISM-SYNC.code-workspace",
+    "created_at": "2025-09-30T11:28:54.367485",
+    "last_used": "2025-09-30T11:28:54.371404"
+  }
+}
