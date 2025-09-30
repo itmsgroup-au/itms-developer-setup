@@ -66,7 +66,7 @@ class ITMSMCPServer:
 
         # Load working context if available
         try:
-            context_file = Path("working_context.json")
+            context_file = Path(".workspace/working_context.json")
             if context_file.exists():
                 with open(context_file, "r") as f:
                     context = json.load(f)
@@ -98,7 +98,7 @@ class ITMSMCPServer:
                 "result": {
                     "protocolVersion": "2024-11-05",
                     "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "itms-workflow", "version": "1.0.0"},
+                    "serverInfo": {"name": "itms-task-master", "version": "1.0.0"},
                 },
             }
 
@@ -896,7 +896,7 @@ class ITMSMCPServer:
     def load_active_task(self):
         """Load active task from storage"""
         try:
-            active_task_file = Path("active_task.json")
+            active_task_file = Path(".workspace/.active_task.json")
             if active_task_file.exists():
                 with open(active_task_file, "r") as f:
                     return json.load(f)
@@ -907,7 +907,11 @@ class ITMSMCPServer:
     def save_active_task(self, task):
         """Save active task to storage"""
         try:
-            active_task_file = Path("active_task.json")
+            # Ensure .workspace directory exists
+            workspace_dir = Path(".workspace")
+            workspace_dir.mkdir(exist_ok=True)
+            
+            active_task_file = Path(".workspace/.active_task.json")
             with open(active_task_file, "w") as f:
                 json.dump(task, f, indent=2)
         except Exception:
@@ -996,7 +1000,7 @@ class ITMSMCPServer:
     def load_working_context(self):
         """Load working context from storage"""
         try:
-            context_file = Path("working_context.json")
+            context_file = Path(".workspace/working_context.json")
             if context_file.exists():
                 with open(context_file, "r") as f:
                     return json.load(f)
@@ -1007,7 +1011,11 @@ class ITMSMCPServer:
     def save_working_context(self, context):
         """Save working context to storage"""
         try:
-            context_file = Path("working_context.json")
+            # Ensure .workspace directory exists
+            workspace_dir = Path(".workspace")
+            workspace_dir.mkdir(exist_ok=True)
+            
+            context_file = Path(".workspace/working_context.json")
             with open(context_file, "w") as f:
                 json.dump(context, f, indent=2)
         except Exception:

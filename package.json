@@ -1,0 +1,15 @@
+{
+  "name": "itms-task-master",
+  "version": "1.0.0",
+  "description": "ITMS MCP Server for intelligent task management",
+  "main": "itms_mcp_server.py",
+  "scripts": {
+    "start": "python3 itms_mcp_server.py"
+  },
+  "keywords": ["mcp", "monday", "task-management", "itms"],
+  "author": "ITMS Group",
+  "license": "MIT",
+  "bin": {
+    "itms-task-master": "./itms_mcp_server.py"
+  }
+}
