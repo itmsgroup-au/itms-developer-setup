@@ -485,6 +485,7 @@ class ProjectSetupWizard:
         """Update all MCP server configurations"""
         try:
             from project_context import ProjectContextManager
+            import json
 
             manager = ProjectContextManager()
 
@@ -501,7 +502,50 @@ class ProjectSetupWizard:
             }
 
             manager.save_context(context)
-            print("✅ MCP configurations updated")
+
+            # Update Cursor MCP settings with current project configuration
+            mcp_settings_path = Path.home() / "Library/Application Support/Cursor/User/globalStorage/kilocode.kilo-code/settings/mcp_settings.json"
+            
+            if mcp_settings_path.exists():
+                with open(mcp_settings_path, "r") as f:
+                    mcp_settings = json.load(f)
+                
+                # Update Odoo MCP server configuration
+                if "mcpServers" in mcp_settings and "odoo" in mcp_settings["mcpServers"]:
+                    # Remove /odoo suffix from URL for MCP server
+                    odoo_url = config["odoo"]["url"]
+                    if odoo_url.endswith("/odoo"):
+                        odoo_url = odoo_url[:-5]  # Remove "/odoo" suffix
+                    
+                    mcp_settings["mcpServers"]["odoo"]["env"]["ODOO_DB"] = config["odoo"]["database"]
+                    mcp_settings["mcpServers"]["odoo"]["env"]["ODOO_URL"] = odoo_url
+                    mcp_settings["mcpServers"]["odoo"]["env"]["ODOO_USERNAME"] = config["odoo"]["username"]
+                    mcp_settings["mcpServers"]["odoo"]["env"]["ODOO_PASSWORD"] = config["odoo"]["password"]
+                
+                # Update ITMS Task Master configuration
+                if "mcpServers" in mcp_settings and "itms-task-master" in mcp_settings["mcpServers"]:
+                    # Fix the file path to point to root directory, not utils
+                    mcp_settings["mcpServers"]["itms-task-master"]["args"] = [
+                        "/Users/markshaw/Desktop/git/itms-developer-setup/itms_mcp_server.py"
+                    ]
+                    # Fix the working directory to root, not utils
+                    mcp_settings["mcpServers"]["itms-task-master"]["cwd"] = "/Users/markshaw/Desktop/git/itms-developer-setup"
+                    
+                    # Update environment variables
+                    env = mcp_settings["mcpServers"]["itms-task-master"]["env"]
+                    env["MONDAY_BOARD_ID"] = str(config["monday"]["board_id"])
+                    env["GITHUB_REPO"] = config["github"]["repo_full_name"]
+                    env["GITHUB_ORG"] = config["github"]["repo_owner"]
+                
+                with open(mcp_settings_path, "w") as f:
+                    json.dump(mcp_settings, f, indent=2)
+                
+                print("✅ MCP configurations updated")
+                print(f"   📋 Updated Odoo database: {config['odoo']['database']}")
+                print(f"   📋 Updated Monday board: {config['monday']['board_id']}")
+                print(f"   📋 Updated GitHub repo: {config['github']['repo_full_name']}")
+            else:
+                print("⚠️  MCP settings file not found, configurations updated locally only")
 
         except Exception as e:
             print(f"❌ Failed to update MCP configurations: {e}")
@@ -509,9 +553,14 @@ class ProjectSetupWizard:
     def update_odoo_config_files(self, config: Dict):
         """Update odoo_config.json files for mcp-odoo compatibility"""
         try:
-            # Create odoo_config.json in current directory
+            # Create odoo_config.json in utils directory
+            # Remove /odoo suffix from URL for JSON config files
+            odoo_url = config["odoo"]["url"]
+            if odoo_url.endswith("/odoo"):
+                odoo_url = odoo_url[:-5]  # Remove "/odoo" suffix
+            
             odoo_config = {
-                "url": config["odoo"]["url"],
+                "url": odoo_url,
                 "db": config["odoo"]["database"],
                 "username": config["odoo"]["username"],
                 "password": config["odoo"]["password"],
@@ -519,7 +568,7 @@ class ProjectSetupWizard:
             }
 
             # Save to current directory
-            config_file = self.setup_dir / "odoo_config.json"
+            config_file = self.setup_dir / "utils" / "odoo_config.json"
             with open(config_file, "w") as f:
                 json.dump(odoo_config, f, indent=2)
             print(f"✅ Created {config_file}")
@@ -697,7 +746,7 @@ class ProjectSetupWizard:
 
         print("\n📁 Configuration files updated:")
         print(f"   📋 .env file: {self.setup_dir / '.env'}")
-        print("   🔧 Odoo configs: ./odoo_config.json & ~/.odoo_config.json")
+        print("   🔧 Odoo configs: ./utils/odoo_config.json & ~/.odoo_config.json")
         print(f"   ⚙️  Project context: {self.setup_dir / 'project_config.json'}")
 
     # Helper methods

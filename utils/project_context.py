@@ -359,7 +359,7 @@ class ProjectContextManager:
             "odoo_version": "18.0",  # Default to 18, could be dynamic
         }
 
-        odoo_config_file = self.setup_dir / "odoo_config.json"
+        odoo_config_file = self.setup_dir / "utils" / "odoo_config.json"
         with open(odoo_config_file, "w") as f:
             json.dump(odoo_config, f, indent=2)
 
